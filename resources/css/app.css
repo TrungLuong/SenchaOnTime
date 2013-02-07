@@ -8550,7 +8550,7 @@ input {
 
 @keyframes showinput {
   0% {
-    opacity: 0.3;
+    opacity: 0.5;
   }
 
   100% {
@@ -8560,7 +8560,7 @@ input {
 
 @-webkit-keyframes showinput {
   0% {
-    opacity: 0.3;
+    opacity: 0.5;
   }
 
   100% {
@@ -8589,8 +8589,8 @@ input {
 }
 
 .adding-task {
-  animation: showinput 7s;
-  -webkit-animation: showinput 7s;
+  animation: showinput 1.2s;
+  -webkit-animation: showinput 1.2s;
 }
 
 .removing-task {
