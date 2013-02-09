@@ -64639,7 +64639,7 @@ Ext.define('ToDoAlpha.view.Main', {
 	         id: 'toast',
 	         hidden: true,
 	         floatingCls: 'toast',
-	         left: Ext.getBody().getSize().width / 2 - 100
+	         left:  100
 	       }
 	    ]
     }
