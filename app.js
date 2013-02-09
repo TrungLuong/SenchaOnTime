@@ -34845,6 +34845,493 @@ Ext.define('Ext.AnimationQueue', {
 })(this);
 
 /**
+ * Provides a base class for audio/visual controls. Should not be used directly.
+ *
+ * Please see the {@link Ext.Audio} and {@link Ext.Video} classes for more information.
+ * @private
+ */
+Ext.define('Ext.Media', {
+    extend: 'Ext.Component',
+    xtype: 'media',
+
+    /**
+     * @event play
+     * Fires whenever the media is played.
+     * @param {Ext.Media} this
+     */
+
+    /**
+     * @event pause
+     * Fires whenever the media is paused.
+     * @param {Ext.Media} this
+     * @param {Number} time The time at which the media was paused at in seconds.
+     */
+
+    /**
+     * @event ended
+     * Fires whenever the media playback has ended.
+     * @param {Ext.Media} this
+     * @param {Number} time The time at which the media ended at in seconds.
+     */
+
+    /**
+     * @event stop
+     * Fires whenever the media is stopped.
+     * The `pause` event will also fire after the `stop` event if the media is currently playing.
+     * The `timeupdate` event will also fire after the `stop` event regardless of playing status.
+     * @param {Ext.Media} this
+     */
+
+    /**
+     * @event volumechange
+     * Fires whenever the volume is changed.
+     * @param {Ext.Media} this
+     * @param {Number} volume The volume level from 0 to 1.
+     */
+
+    /**
+     * @event mutedchange
+     * Fires whenever the muted status is changed.
+     * The volumechange event will also fire after the `mutedchange` event fires.
+     * @param {Ext.Media} this
+     * @param {Boolean} muted The muted status.
+     */
+
+    /**
+     * @event timeupdate
+     * Fires when the media is playing every 15 to 250ms.
+     * @param {Ext.Media} this
+     * @param {Number} time The current time in seconds.
+     */
+
+    config: {
+        /**
+         * @cfg {String} url
+         * Location of the media to play.
+         * @accessor
+         */
+        url: '',
+
+        /**
+         * @cfg {Boolean} enableControls
+         * Set this to `false` to turn off the native media controls.
+         * Defaults to `false` when you are on Android, as it doesn't support controls.
+         * @accessor
+         */
+        enableControls: Ext.os.is.Android ? false : true,
+
+        /**
+         * @cfg {Boolean} autoResume
+         * Will automatically start playing the media when the container is activated.
+         * @accessor
+         */
+        autoResume: false,
+
+        /**
+         * @cfg {Boolean} autoPause
+         * Will automatically pause the media when the container is deactivated.
+         * @accessor
+         */
+        autoPause: true,
+
+        /**
+         * @cfg {Boolean} preload
+         * Will begin preloading the media immediately.
+         * @accessor
+         */
+        preload: true,
+
+        /**
+         * @cfg {Boolean} loop
+         * Will loop the media forever.
+         * @accessor
+         */
+        loop: false,
+
+        /**
+         * @cfg {Ext.Element} media
+         * A reference to the underlying audio/video element.
+         * @accessor
+         */
+        media: null,
+
+        /**
+         * @cfg {Number} volume
+         * The volume of the media from 0.0 to 1.0.
+         * @accessor
+         */
+        volume: 1,
+
+        /**
+         * @cfg {Boolean} muted
+         * Whether or not the media is muted. This will also set the volume to zero.
+         * @accessor
+         */
+        muted: false
+    },
+
+    constructor: function() {
+        this.mediaEvents = {};
+        this.callSuper(arguments);
+    },
+
+    initialize: function() {
+        var me = this;
+        me.callParent();
+
+        me.on({
+            scope: me,
+
+            activate  : me.onActivate,
+            deactivate: me.onDeactivate
+        });
+
+        me.addMediaListener({
+            canplay: 'onCanPlay',
+            play: 'onPlay',
+            pause: 'onPause',
+            ended: 'onEnd',
+            volumechange: 'onVolumeChange',
+            timeupdate: 'onTimeUpdate'
+        });
+    },
+
+    addMediaListener: function(event, fn) {
+        var me = this,
+            dom = me.media.dom,
+            bind = Ext.Function.bind;
+
+        Ext.Object.each(event, function(e, fn) {
+            fn = bind(me[fn], me);
+            me.mediaEvents[e] = fn;
+            dom.addEventListener(e, fn);
+        });
+    },
+
+    onPlay: function() {
+        this.fireEvent('play', this);
+    },
+
+    onCanPlay: function() {
+        this.fireEvent('canplay', this);
+    },
+
+    onPause: function() {
+        this.fireEvent('pause', this, this.getCurrentTime());
+    },
+
+    onEnd: function() {
+        this.fireEvent('ended', this, this.getCurrentTime());
+    },
+
+    onVolumeChange: function() {
+        this.fireEvent('volumechange', this, this.media.dom.volume);
+    },
+
+    onTimeUpdate: function() {
+        this.fireEvent('timeupdate', this, this.getCurrentTime());
+    },
+
+    /**
+     * Returns if the media is currently playing.
+     * @return {Boolean} playing `true` if the media is playing.
+     */
+    isPlaying: function() {
+        return !Boolean(this.media.dom.paused);
+    },
+
+    // @private
+    onActivate: function() {
+        var me = this;
+
+        if (me.getAutoResume() && !me.isPlaying()) {
+            me.play();
+        }
+    },
+
+    // @private
+    onDeactivate: function() {
+        var me = this;
+
+        if (me.getAutoPause() && me.isPlaying()) {
+            me.pause();
+        }
+    },
+
+    /**
+     * Sets the URL of the media element. If the media element already exists, it is update the src attribute of the
+     * element. If it is currently playing, it will start the new video.
+     */
+    updateUrl: function(newUrl) {
+        var dom = this.media.dom;
+
+        //when changing the src, we must call load:
+        //http://developer.apple.com/library/safari/#documentation/AudioVideo/Conceptual/Using_HTML5_Audio_Video/ControllingMediaWithJavaScript/ControllingMediaWithJavaScript.html
+
+        dom.src = newUrl;
+
+        if ('load' in dom) {
+            dom.load();
+        }
+
+        if (this.isPlaying()) {
+            this.play();
+        }
+    },
+
+    /**
+     * Updates the controls of the video element.
+     */
+    updateEnableControls: function(enableControls) {
+        this.media.dom.controls = enableControls ? 'controls' : false;
+    },
+
+    /**
+     * Updates the loop setting of the media element.
+     */
+    updateLoop: function(loop) {
+        this.media.dom.loop = loop ? 'loop' : false;
+    },
+
+    /**
+     * Starts or resumes media playback.
+     */
+    play: function() {
+        var dom = this.media.dom;
+
+        if ('play' in dom) {
+            dom.play();
+            setTimeout(function() {
+                dom.play();
+            }, 10);
+        }
+    },
+
+    /**
+     * Pauses media playback.
+     */
+    pause: function() {
+        var dom = this.media.dom;
+
+        if ('pause' in dom) {
+            dom.pause();
+        }
+    },
+
+    /**
+     * Toggles the media playback state.
+     */
+    toggle: function() {
+        if (this.isPlaying()) {
+            this.pause();
+        } else {
+            this.play();
+        }
+    },
+
+    /**
+     * Stops media playback and returns to the beginning.
+     */
+    stop: function() {
+        var me = this;
+
+        me.setCurrentTime(0);
+        me.fireEvent('stop', me);
+        me.pause();
+    },
+
+    //@private
+    updateVolume: function(volume) {
+        this.media.dom.volume = volume;
+    },
+
+    //@private
+    updateMuted: function(muted) {
+        this.fireEvent('mutedchange', this, muted);
+
+        this.media.dom.muted = muted;
+    },
+
+    /**
+     * Returns the current time of the media, in seconds.
+     * @return {Number}
+     */
+    getCurrentTime: function() {
+        return this.media.dom.currentTime;
+    },
+
+    /*
+     * Set the current time of the media.
+     * @param {Number} time The time, in seconds.
+     * @return {Number}
+     */
+    setCurrentTime: function(time) {
+        this.media.dom.currentTime = time;
+
+        return time;
+    },
+
+    /**
+     * Returns the duration of the media, in seconds.
+     * @return {Number}
+     */
+    getDuration: function() {
+        return this.media.dom.duration;
+    },
+
+    destroy: function() {
+        var me = this,
+            dom  = me.media.dom,
+            mediaEvents = me.mediaEvents;
+
+        Ext.Object.each(mediaEvents, function(event, fn) {
+            dom.removeEventListener(event, fn);
+        });
+
+        this.callSuper();
+    }
+});
+
+/**
+ * {@link Ext.Audio} is a simple class which provides a container for the [HTML5 Audio element](http://developer.mozilla.org/en-US/docs/Using_HTML5_audio_and_video).
+ *
+ * ## Recommended File Types/Compression:
+ * * Uncompressed WAV and AIF audio
+ * * MP3 audio
+ * * AAC-LC
+ * * HE-AAC audio
+ *
+ * ## Notes
+ * On Android devices, the audio tags controls do not show. You must use the {@link #method-play}, {@link #method-pause} and
+ * {@link #toggle} methods to control the audio (example below).
+ *
+ * ## Examples
+ *
+ * Here is an example of the {@link Ext.Audio} component in a fullscreen container:
+ *
+ *     @example preview
+ *     Ext.create('Ext.Container', {
+ *         fullscreen: true,
+ *         layout: {
+ *             type : 'vbox',
+ *             pack : 'center',
+ *             align: 'stretch'
+ *         },
+ *         items: [
+ *             {
+ *                 xtype : 'toolbar',
+ *                 docked: 'top',
+ *                 title : 'Ext.Audio'
+ *             },
+ *             {
+ *                 xtype: 'audio',
+ *                 url  : 'touch/examples/audio/crash.mp3'
+ *             }
+ *         ]
+ *     });
+ *
+ * You can also set the {@link #hidden} configuration of the {@link Ext.Audio} component to true by default,
+ * and then control the audio by using the {@link #method-play}, {@link #method-pause} and {@link #toggle} methods:
+ *
+ *     @example preview
+ *     Ext.create('Ext.Container', {
+ *         fullscreen: true,
+ *         layout: {
+ *             type: 'vbox',
+ *             pack: 'center'
+ *         },
+ *         items: [
+ *             {
+ *                 xtype : 'toolbar',
+ *                 docked: 'top',
+ *                 title : 'Ext.Audio'
+ *             },
+ *             {
+ *                 xtype: 'toolbar',
+ *                 docked: 'bottom',
+ *                 defaults: {
+ *                     xtype: 'button',
+ *                     handler: function() {
+ *                         var container = this.getParent().getParent(),
+ *                             // use ComponentQuery to get the audio component (using its xtype)
+ *                             audio = container.down('audio');
+ *
+ *                         audio.toggle();
+ *                         this.setText(audio.isPlaying() ? 'Pause' : 'Play');
+ *                     }
+ *                 },
+ *                 items: [
+ *                     { text: 'Play', flex: 1 }
+ *                 ]
+ *             },
+ *             {
+ *                 html: 'Hidden audio!',
+ *                 styleHtmlContent: true
+ *             },
+ *             {
+ *                 xtype : 'audio',
+ *                 hidden: true,
+ *                 url   : 'touch/examples/audio/crash.mp3'
+ *             }
+ *         ]
+ *     });
+ * @aside example audio
+ */
+Ext.define('Ext.Audio', {
+    extend: 'Ext.Media',
+    xtype : 'audio',
+
+    config: {
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        cls: Ext.baseCSSPrefix + 'audio'
+
+        /**
+         * @cfg {String} url
+         * The location of the audio to play.
+         *
+         * ### Recommended file types are:
+         * * Uncompressed WAV and AIF audio
+         * * MP3 audio
+         * * AAC-LC
+         * * HE-AAC audio
+         * @accessor
+         */
+    },
+
+    // @private
+    onActivate: function() {
+        var me = this;
+
+        me.callParent();
+
+        if (Ext.os.is.Phone) {
+            me.element.show();
+        }
+    },
+
+    // @private
+    onDeactivate: function() {
+        var me = this;
+
+        me.callParent();
+
+        if (Ext.os.is.Phone) {
+            me.element.hide();
+        }
+    },
+
+    template: [{
+        reference: 'media',
+        preload: 'auto',
+        tag: 'audio',
+        cls: Ext.baseCSSPrefix + 'component'
+    }]
+});
+
+/**
  * @class Ext.ComponentQuery
  * @extends Object
  * @singleton
@@ -62729,7 +63216,8 @@ Ext.define('ToDoAlpha.view.control.AddOnTimeline', {
 	config:{
 		width: '100%',
 		id: 'conAddTimeline',
-		cls: 'adding-task',
+		hidden: true,
+	  //cls: 'adding-task',
 		items: [
 	        {
 	        	xtype: 'textfield',
@@ -62737,7 +63225,12 @@ Ext.define('ToDoAlpha.view.control.AddOnTimeline', {
 	        	clearIcon: false,
 	        	cls: 'input-add-timeline timeline-event',
 	        	style: 'background: none'
-	        }]
+	        }],
+	  listeners:{
+	    hide: function(){
+	      this.child('#txtAddTimeline').setValue('');
+	    }
+	  } 
 		}
 });
 
@@ -62761,7 +63254,9 @@ Ext.define('ToDoAlpha.view.control.HourButton', {
 Ext.define('ToDoAlpha.controller.Timeline', {
     extend: 'Ext.app.Controller',
     
-    requires:['ToDoAlpha.view.control.AddOnTimeline', 'ToDoAlpha.view.control.HourButton'],
+    requires:['ToDoAlpha.view.control.AddOnTimeline', 
+      'ToDoAlpha.view.control.HourButton',
+      'Ext.Audio'],
     
     config: {
         refs: {
@@ -62783,26 +63278,13 @@ Ext.define('ToDoAlpha.controller.Timeline', {
         //this.callParent(arguments);
 		Ext.namespace('Timeline');
 		Timeline.Controler = this;
-//		Timeline.indicator = Ext.create('Ext.Component', {
-//    		style: 'width: 10px; height: 10px; background-color: yellow; top: ' + -10 + 'px; position: absolute',
-//    		});
-//    	this.getConMainLine().add(Timeline.indicator);
     },
     onHourButtonTab: function(button, e, eOpts){
-    	//Timeline.dragButton.destroy();
-//console.log(Ext.getStore('Tasks').load());
-//    	Ext.getStore('Tasks').add([{
-//    		  title: 'Do this now',
-//    		  tasktime: new Date('1/20/2013 10:50:00 PM GMT+0700'),
-//    		  taskorder: 2 ,
-//    		  isontimeline: true
-//    		}]);
-//    	Ext.getStore('Tasks').sync();
-      if(Ext.getCmp('txtAddTimeline') == undefined){
-    	  var txt = Ext.create('ToDoAlpha.view.control.AddOnTimeline', {top: button.getTop()});
+    	  var txt = this.getConAddTimeline(); 
+    	  txt.setTop(button.getTop());
+    	  txt.show();
       	txt.child('#txtAddTimeline').on('blur', this.onAddTimelineEnter);
       	txt.child('#txtAddTimeline').config.hour = button.getHour();
-      	this.getConTaskList().add(txt);
       	//document.getElementsByClassName('x-input-text')[0].focus();
       	//Ext.getCmp('txtAddTimeline').focus(true, 2000);
       	if(/(Android)/.test(navigator.userAgent)){
@@ -62810,7 +63292,6 @@ Ext.define('ToDoAlpha.controller.Timeline', {
       	}else{
           	Ext.getCmp('txtAddTimeline').focus(true,10);
       	}
-    	}
     },
     onAddTimelineEnter: function(textField){
     	var title = textField.getValue().capitaliseFirstLetter(),
@@ -62837,7 +63318,7 @@ Ext.define('ToDoAlpha.controller.Timeline', {
   			  isontimeline: true
 			   }]);
     		rStore.sync();
-    		Timeline.Controler.getConAddTimeline().destroy();
+    		Timeline.Controler.getConAddTimeline().hide();
     		//Show event to the screen
     		if(hourIndicator != undefined){
     		  Timeline.Controler.getConTimeList().add(hourIndicator);
@@ -62854,10 +63335,14 @@ Ext.define('ToDoAlpha.controller.Timeline', {
     			cls: 'timeline-event'
     		}));
     	}else{
-    		Timeline.Controler.getConAddTimeline().destroy();
+    		Timeline.Controler.getConAddTimeline().hide();
     	}
-    	if(Ext.getCmp('minute-indicator-' + hour + '-'+ minute)){
-    	 Ext.getCmp('minute-indicator-' + hour + '-'+ minute).hide();
+    	//set Vidible if want to add multi event on an indicator/ hide to disable add
+    	//var mIndicator = Ext.getCmp('minute-indicator-' + Ext.Date.format(time, 'G') + '-'+ parseInt(Ext.Date.format(time, 'i')));
+    	var mIndicator = document.getElementById('minute-indicator-' + Ext.Date.format(time, 'G') + '-'+ parseInt(Ext.Date.format(time, 'i')));
+    	if(mIndicator){
+    	 mIndicator.style.visibility ='hidden';
+    	 //mIndicator.config.style =('visibility: hidden;');
     	}
     },
     onHourButtonTabhold: function(button) {
@@ -62873,6 +63358,13 @@ Ext.define('ToDoAlpha.controller.Timeline', {
 //                direction: 'vertical',
 //    		}});
 //    	this.getConMainLine().add(indicator);
+
+      // var sound = Ext.create('Ext.Audio',{
+       // url: '../resources/sound/facebook_ringtone_pop.m4a',
+       // autoplay:true,
+       // hidden:true
+      // });
+      // sound.play();
     	var hourButton = Ext.create('ToDoAlpha.view.control.HourButton',{
 			text: button.getText(),
 			top: button.getTop(),
@@ -62912,6 +63404,7 @@ Ext.define('ToDoAlpha.controller.Timeline', {
 //    		var pos = (Timeline.dragButton.hour - 8) * App.config.defaultHourSpace + offsetY;
 //    		Timeline.indicator.setTop(pos);
 //    	}
+
     	var items = Timeline.minuteIndicators,
 			ln = items.length,
 			pageBoxRegion = draggable.getElement().getPageBox(true),
@@ -62924,7 +63417,8 @@ Ext.define('ToDoAlpha.controller.Timeline', {
   			intersect = region.intersect(item);
   			if (intersect) {
   				Ext.get(item.el).setVisibility(true);
-  				Timeline.dragButton.setText(item.text);
+  				//This cause crashws
+  				//Timeline.dragButton.setText(item.text);
   			}else{
   				Ext.get(item.el).setVisibility(false);
   			}
@@ -62949,32 +63443,31 @@ Ext.define('ToDoAlpha.controller.Timeline', {
   			item = items[i];
   			intersect = region.intersect(item);
   			if (intersect) {
-  			  if(Ext.getCmp('txtAddTimeline') == undefined){
-    				var txt = Ext.create('ToDoAlpha.view.control.AddOnTimeline', {top: item.top - headerHeight + currentY});
-    		    	txt.child('#txtAddTimeline').on('blur', this.onAddTimelineEnter);
-    		    	txt.child('#txtAddTimeline').config.hour = Timeline.dragButton.getHour();
-    		    	txt.child('#txtAddTimeline').config.minute = (item.top - hTop - headerHeight + currentY)/2 ;
-    		    	
-    		    	this.getConTaskList().add(txt);
-    		    	Ext.getCmp('txtAddTimeline').focus(true,10);
-    		    	break;
-  		   }
+			    var txt = Timeline.Controler.getConAddTimeline(); 
+          txt.setTop(item.top - headerHeight + currentY);
+          txt.show();
+  		    	txt.child('#txtAddTimeline').on('blur', this.onAddTimelineEnter);
+  		    	txt.child('#txtAddTimeline').config.hour = Timeline.dragButton.getHour();
+  		    	txt.child('#txtAddTimeline').config.minute = (item.top - hTop - headerHeight + currentY)/2 ;
+  		    	
+  		    	Ext.getCmp('txtAddTimeline').focus(true,10);
+  		    	break;
   			}
   		}
     	Timeline.dragButton.destroy();
     },
     populateTimeStepRegions : function(selector) {
     	Timeline.minuteIndicators = [];
-		var els = Ext.get('conMainLine').select(selector).elements,
-		ln = els.length, i, item, el;
-		for (i = 0; i < ln; i++) {
-			el = els[i];
-			item = Ext.get(el).getPageBox(true);
-			item.el = el;
-			item.index = i;
-			item.text = Ext.get(el).child('.x-innerhtml').getHtml();
-			Timeline.minuteIndicators.push(item);
-		}
+  		var els = Ext.get('conMainLine').select(selector).elements,
+  		ln = els.length, i, item, el;
+  		for (i = 0; i < ln; i++) {
+  			el = els[i];
+  			item = Ext.get(el).getPageBox(true);
+  			item.el = el;
+  			item.index = i;
+  			item.text = Ext.get(el).child('.x-innerhtml').getHtml();
+  			Timeline.minuteIndicators.push(item);
+  		}
     }
 });
 
@@ -63085,10 +63578,26 @@ Ext.define('ToDoAlpha.view.control.Event', {
   		cls: 'timeline-event',
   		listeners : {
               element : 'element',
-              swipe : function() {
-                  console.log('swipe abc');
+              swipe : function(event, node, options, eOpts) {
+                  this.onSwipe(event, node, options, eOpts);
               }
           }
+    },
+    onSwipe: function(event, node, options, eOpts){
+      console.log(event, node, options, eOpts);return;
+      var tStore = Ext.getStore('Reminders');
+      if(event.direction == 'left'){
+          listItem.addCls('removing-task');
+          var checkIcon = Ext.create('Ext.Component',{top: top, cls: 'check-icon'});
+          addIcon.add(checkIcon);
+          setTimeout(function(){
+            tStore.removeAt(idx);
+            checkIcon.destroy();
+            },1000);
+      }else{
+        buttonClock.show('fade');
+        buttonDelete.show('fade');
+      }
     }
 });
 
@@ -63103,28 +63612,36 @@ Ext.define('ToDoAlpha.view.Timeline', {
     	},
     	//style: 'background-color: #A9F5BC;',
         items: [
+          // {
+            // xtype: 'component',
+            // id: 'mTlAdd',
+            // html: 'ADD',
+            // style: 'top: -120px;position: absolute;',
+            // cls: 'menu-top-item-timeline'
+          // },
           {
             xtype: 'component',
-            html: 'ADD',
-            style: 'top: -120px;position: absolute;',
-            cls: 'menu-top-item-timeline'
-          },
-          {
-            xtype: 'component',
+            id: 'mTlHistory',
             html: 'HISTORY',
             style: 'top: -85px;position: absolute;',
-            cls: 'menu-top-item-timeline'
+            cls: 'menu-top-item-tl'
           },
           {
             xtype: 'component',
+            id: 'mTlCollapse',
             html: 'COLLAPSE',
             style: 'top: -50px;position: absolute;',
-            cls: 'menu-top-item-timeline'
+            cls: 'menu-top-item-tl'
           },
  	        {
           	xtype: 'container',
           	id: 'conTaskList',
-          	width: '80%'
+          	width: '80%',
+          	items: [
+              {
+                xtype: 'addtimeline'
+              }
+          	]
           	//style: 'background-color: lightgrey'
           },
  	        {
@@ -63213,7 +63730,6 @@ Ext.define('ToDoAlpha.view.Timeline', {
         		}else{
         		  var hButton = Ext.ComponentQuery.query('#hourButton' + h)[0];
         		  if(hButton != undefined){
-        		    hButton.setDisabled(true);
         		    hButton.setCls('hour-white');
         		  }
         		}
@@ -63239,25 +63755,25 @@ Ext.define('ToDoAlpha.view.Timeline', {
     	}, this);	
     },
     paintTimeSteps: function(hourSpace, top, isFirstHour, hour){
-		var appConfig = AppConfig,
-			stepSpace = appConfig.timeStep * appConfig.defaultHourSpace / 60,
-			start = isFirstHour ? 0 : stepSpace,
-			hHtml, m;
-		for(var j = start; j <= hourSpace; j += stepSpace){
-			hHtml = ''; m = j/2;
-			if (m == 60) {hour ++; m = 0;}
-			if(hour > 12){
-				hHtml += hour - 12 + ':' + m + ' PM';
-			}else{
-				hHtml += hour + ':' + m + ' AM';
-			}
-			this.child('#conMainLine').add(Ext.create('Ext.Component',
-			 { top: top + j, 
-			   id: 'minute-indicator-' + hour + '-' + m, 
-			   cls: 'minute-indicator-' + hour + ' time-indicator', 
-			   html: hHtml, 
-			   style: 'visibility: hidden; width: 10px; height: 10px; background-color: yellow; overflow: hidden; border-radius:5px; opacity:0.5'}));
-		}
+  		var appConfig = AppConfig,
+  			stepSpace = appConfig.timeStep * appConfig.defaultHourSpace / 60,
+  			start = isFirstHour ? 0 : stepSpace,
+  			hHtml, m;
+  		for(var j = start; j <= hourSpace; j += stepSpace){
+  			hHtml = ''; m = j/2;
+  			if (m == 60) {hour ++; m = 0;}
+  			if(hour > 12){
+  				hHtml += hour - 12 + ':' + m + ' PM';
+  			}else{
+  				hHtml += hour + ':' + m + ' AM';
+  			}
+  			this.child('#conMainLine').add(Ext.create('Ext.Component',
+  			 { top: top + j, 
+  			   id: 'minute-indicator-' + hour + '-' + m, 
+  			   cls: 'minute-indicator-' + hour + ' time-indicator', 
+  			   html: hHtml, 
+  			   style: 'visibility: hidden; width: 10px; height: 10px; font-size: 0em;background-color: #84daff; overflow: hidden; border-radius:5px'}));
+  		}
     }
 });
 
@@ -63302,7 +63818,13 @@ Ext.define('ToDoAlpha.view.Calendar', {
 	},
 	initialize : function() {
 		this.callParent(arguments);
-
+		
+    var scroller = this.getScrollable().getScroller();
+    scroller.on({
+      scroll: this.onScrollChange,
+      scope: this
+    });
+    
 		var date = new Date();
 		//var todayHtml = '<div class="day-header">TODAY</div><div class="day-header-details" style="margin-top:13px">'+ 
 			//Ext.Date.format(date, 'M') + '<br/>' + Ext.Date.format(date, 'j') +'</div>';
@@ -63333,6 +63855,24 @@ Ext.define('ToDoAlpha.view.Calendar', {
     	var timeHtml = '<div style="padding: 13px 13px 0px 0px; font-size: 1.1em; line-height: 18px">'+h+':'+m+'<div class="time-header-details">'+s+ ' ' + ap + '</div><div>';
     	this.down('#headerTime').setHtml(timeHtml);
     	t=setTimeout(function(){me.setCurrentTime()},500);
+    }, 
+    onScrollChange: function(scroller, x, y){
+      if (y < 0 && scroller.isTouching) {
+        var conTimline = this.child('#conTimeline'); 
+        //conTimline.child('#mTlAdd').removeCls('menu-top-item-tl-selected');
+        conTimline.child('#mTlHistory').removeCls('menu-top-item-tl-selected');
+        conTimline.child('#mTlCollapse').removeCls('menu-top-item-tl-selected');
+        if(-y >= 120){
+          //conTimline.child('#mTlAdd').addCls('menu-top-item-tl-selected');
+          //this.slectedMenu = 0;
+        }else if(-y >= 85){
+          conTimline.child('#mTlHistory').addCls('menu-top-item-tl-selected');
+          this.slectedMenu = 1;
+        }else if (-y >= 50 && -y < 85){
+            conTimline.child('#mTlCollapse').addCls('menu-top-item-tl-selected');
+            this.slectedMenu = 2;
+        }
+      }
     }
 });
 
@@ -63510,23 +64050,22 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
 //    		Timeline.indicator.setTop(pos);
 //    	}
     	var items = Timeline.minuteIndicators,
-		ln = items.length,
-		pageBoxRegion = draggable.getElement().getPageBox(true),
-		region = Ext.util.Region(pageBoxRegion),
-		i, intersect,item
-		;
+  		ln = items.length,
+  		pageBoxRegion = draggable.getElement().getPageBox(true),
+  		region = Ext.util.Region(pageBoxRegion),
+  		i, intersect,item;
 		
-		for (i = 0; i < ln; i++) {
-						item = items[i];
-						intersect = region.intersect(item);
-						if (intersect) {
-							Ext.get(item.el).setVisibility(true);
-							Todo.listItem.draggedClock.setText(item.text);
-							//return;
-						}else{
-							Ext.get(item.el).setVisibility(false);
-						}
-		}
+  		for (i = 0; i < ln; i++) {
+  						item = items[i];
+  						intersect = region.intersect(item);
+  						if (intersect) {
+  							Ext.get(item.el).setVisibility(true);
+  							Todo.listItem.draggedClock.setText(item.text);
+  							//return;
+  						}else{
+  							Ext.get(item.el).setVisibility(false);
+  						}
+  		}
     },
     onClockDragend: function(listItem, draggable, e, eOpts){
       Ext.getCmp('listTodo').setScrollable(true);
@@ -63555,9 +64094,9 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
   				rStore.add({title: task.get('title'),
             tasktime: time,
             isontimeline: true});
-  				//rStore.sync();
+  				rStore.sync();
   				tStore.removeAt(tIndex);
-  				//tStore.sync();
+  				tStore.sync();
   				
 	        //Show event to the screen
 	        var top = (item.top - AppConfig.timelineHeaderHeight + currentY),
@@ -63830,7 +64369,7 @@ Ext.define('ToDoAlpha.view.todo.List', {
     	this.insert(0, [mSync, mAddEnd, mAdd]);
     },
     onScrollChange: function(scroller, x, y) {
-        if (y < 0) {
+        if (y < 0 && scroller.isTouching) {
             this.onBounceTop(scroller, y);
         }
 //        if (y > this.maxScroller.y) {
@@ -63843,13 +64382,13 @@ Ext.define('ToDoAlpha.view.todo.List', {
 		this.child('#mSync').removeCls('menu-top-item-selected');
     	if(-y >= 120){
     		this.child('#mSync').addCls('menu-top-item-selected');
-    		if(scroller.isTouching){Todo.List.slectedMenu = 0;}
+    		Todo.List.slectedMenu = 0;
     	}else if(-y >= 85){
     		this.child('#mAddEnd').addCls('menu-top-item-selected');
-    		if(scroller.isTouching){Todo.List.slectedMenu = 1;}
+    		Todo.List.slectedMenu = 1;
     	}else if (-y >= Todo.List.pullHeight && -y < 85){
     		this.child('#mAdd').addCls('menu-top-item-selected');
-    		if(scroller.isTouching){Todo.List.slectedMenu = 2;}
+    		Todo.List.slectedMenu = 2;
     	}
 	    if (!Todo.List.isReleased) {
 	        if (!Todo.List.isAdding && -y >= Todo.List.pullHeight) {
@@ -63875,7 +64414,9 @@ Ext.define('ToDoAlpha.view.todo.List', {
         	var store = Ext.getStore('Tasks');
         	if(store.getNewRecords().length == 0 ){
           	if(Todo.List.slectedMenu == 0){
-          		Ext.Msg.alert('Thank you', 'This feature is comming soon...', Ext.emptyFn);
+          	  Todo.List.isAdding = false;
+          		//Ext.Msg.alert('Thank you', 'This feature is comming soon...', Ext.emptyFn);
+          		AppHelper.showToast(Todo.List, "This feature is comming soon...");
           	}else if(Todo.List.slectedMenu == 1){
           		var last = store.last(),
       				order = last ? last.get('taskorder') + 1 : 0;
@@ -63896,12 +64437,11 @@ Ext.define('ToDoAlpha.view.todo.List', {
       				}]);
           	}
         	}
-        	//store.sync();
-            	scroller.on({
-	                scrollend: function(){ Todo.List.isReleased = false},
-	                single: true,
-	                scope: Todo.List
-            	});
+        	scroller.on({
+              scrollend: function(){ Todo.List.isReleased = false},
+              single: true,
+              scope: Todo.List
+        	});
             Todo.List.isReleased = true;
             //this.setData(this.getData().unshift({title: 'add new'}));
             //this.refresh();
@@ -63926,8 +64466,10 @@ Ext.define('ToDoAlpha.view.todo.List', {
           var checkIcon = Ext.create('Ext.Component',{top: top, cls: 'check-icon'});
           addIcon.add(checkIcon);
           setTimeout(function(){
+            //Change to completed NOT delete, below is for demo
             tStore.removeAt(idx);
             checkIcon.destroy();
+            tStore.sync();
             },1000);
           // Ext.Anim.run(listItem, 'fade', {
               // after: function(){tStore.removeAt(idx);}
@@ -64091,25 +64633,16 @@ Ext.define('ToDoAlpha.view.Main', {
     	},
     	cls: 'background-none',
 	    items:[
-	       {xtype: 'dragcontainer'}
+	       {xtype: 'dragcontainer'},
+	       {
+	         xtype: 'panel',
+	         id: 'toast',
+	         hidden: true,
+	         floatingCls: 'toast',
+	         left: Ext.getBody().getSize().width / 2 - 100
+	       }
 	    ]
-//    listeners: {
-//	    	activeitemchange: function(cardLayout, newActiveItem, oldActiveItem, eOpts){
-//	    		
-//	    		if(newActiveItem.id == 'time'){
-//	    			//newActiveItem.setWidth('100%');
-//	    		}else{
-//	    			//oldActiveItem.setWidth('120%');
-//	    		}
-//	    	},
-//	    	move: function(cardLayout, item, toIndex, fromIndex, eOpts){
-//	    		//console.log(toIndex);
-//	    	}
-//    	}
     }
-//    initConfig: function() {
-//        this.callParent();
-//    }
 });
 
 
