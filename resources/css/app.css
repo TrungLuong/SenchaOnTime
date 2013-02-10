@@ -8358,7 +8358,7 @@ input {
 /*Timeline*/
 .line-gb-color {
   border-radius: 5px;
-  background-image: url("../../resources/images/10pxwhite.png");
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .hour, .hour-white {
@@ -8393,7 +8393,7 @@ input {
 
 .timeline-event::after {
   content: "";
-  opacity: 0.18;
+  opacity: 0.17;
   width: 0;
   height: 0;
   position: absolute;
@@ -8454,18 +8454,36 @@ input {
   overflow: hidden;
 }
 
+.event-indicator-hover {
+  width: 10px;
+  height: 10px;
+  background-color: #84daff;
+  overflow: visible;
+  border-radius: 5px;
+}
+.event-indicator-hover .x-innerhtml {
+  margin-left: -70px !important;
+  width: 60px;
+  text-align: left;
+  font-size: 0.8em;
+}
+
+.event-indicator-selected .x-innerhtml {
+  margin-left: 12px !important;
+  font-size: 0.7em;
+}
+
 .button-hour-draging {
   color: #f2f7f8;
   font-size: 0.8em;
   padding: 0 !important;
+  left: -10px;
   width: 10px !important;
   height: 11px !important;
+  overflow: visible;
 }
 .button-hour-draging span.x-button-label, .button-hour-draging span.x-badge {
-  margin-left: -70px !important;
-  opacity: 1;
-  line-height: 12px;
-  text-align: left;
+  margin-left: -60px !important;
 }
 
 /*End Timeline*/
@@ -8505,7 +8523,7 @@ input {
 .menu-top-item-selected, .menu-top-item-tl-selected {
   color: #f2f7f8;
   opacity: 0.8;
-  background-image: url("../../resources/images/10pxWhite.png");
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
 
@@ -8621,7 +8639,7 @@ input {
 }*/
 /*Todo end*/
 .toast {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.8);
   color: #3885a3;
   position: absolute;
   font-size: 0.8em;
@@ -8629,4 +8647,5 @@ input {
   padding: 5px 10px 5px 10px;
   border-radius: 3px;
   box-shadow: 10px 11px 24px #0f6080;
+  width: 40%;
 }
