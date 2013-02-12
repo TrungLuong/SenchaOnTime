@@ -8332,6 +8332,11 @@ input {
   /*CHANGE: replace width: 6px;*/
 }
 
+.x-scroll-bar-x.active {
+  width: 0px;
+  /*CHANGE: replace width: 6px;*/
+}
+
 .bg-color, html, body {
   /* IE10 Consumer Preview */
   background-image: -ms-radial-gradient(center bottom, circle farthest-side, #3885a3 0%, #094f70 100%);
@@ -8405,28 +8410,60 @@ input {
   border-color: transparent #84daff;
 }
 
+#headerDay {
+  color: #f2f7f8;
+  height: auto;
+  margin-left: -10px;
+}
+
 .day-header {
   font-size: 2.4em;
   float: left;
   margin: 10px 0px 0px 15px;
   padding-right: 2px;
   line-height: 35px;
+  width: 55px;
   color: #84daff;
   opacity: 0.8;
   /*border-right: 1px solid $white;*/
 }
 
+.day-picker {
+  position: absolute;
+  left: 16px;
+  top: 0px;
+  font-size: 2.4em;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #3885a3;
+  width: 55px;
+  height: 500px;
+  z-index: 9999;
+}
+
+.month-picker {
+  position: absolute;
+  left: 16px;
+  top: 0px;
+  font-size: 0.75em;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #3885a3;
+  width: 320px;
+  height: 40px;
+  margin-top: 12px;
+  z-index: 9998;
+}
+
 .today-text {
   -webkit-transform: rotate(-90deg);
-  -moz-transform: rotate(90deg);
-  -ms-transform: rotate(90deg);
-  -o-transform: rotate(90deg);
-  transform: rotate(90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  transform: rotate(-90deg);
   writing-mode: lr-tb;
   position: absolute;
   font-size: 0.6em;
+  top: 24px;
   left: -10px;
-  top: 21px;
 }
 
 .day-header-details {
@@ -8434,6 +8471,7 @@ input {
   float: left;
   font-size: 0.75em;
   line-height: 18px;
+  text-align: left;
 }
 
 .time-header-details {
@@ -8465,7 +8503,7 @@ input {
   margin-left: -70px !important;
   width: 60px;
   text-align: left;
-  font-size: 0.8em;
+  font-size: 0.7em;
 }
 
 .event-indicator-selected .x-innerhtml {
@@ -8617,6 +8655,11 @@ input {
 .removing-task {
   animation: hidetask 1s;
   -webkit-animation: hidetask 1s;
+}
+
+.fade-out-500 {
+  animation: hidetask 0.5s;
+  -webkit-animation: hidetask 0.5s;
 }
 
 .check-icon {

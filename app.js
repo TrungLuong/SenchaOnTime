@@ -34845,493 +34845,6 @@ Ext.define('Ext.AnimationQueue', {
 })(this);
 
 /**
- * Provides a base class for audio/visual controls. Should not be used directly.
- *
- * Please see the {@link Ext.Audio} and {@link Ext.Video} classes for more information.
- * @private
- */
-Ext.define('Ext.Media', {
-    extend: 'Ext.Component',
-    xtype: 'media',
-
-    /**
-     * @event play
-     * Fires whenever the media is played.
-     * @param {Ext.Media} this
-     */
-
-    /**
-     * @event pause
-     * Fires whenever the media is paused.
-     * @param {Ext.Media} this
-     * @param {Number} time The time at which the media was paused at in seconds.
-     */
-
-    /**
-     * @event ended
-     * Fires whenever the media playback has ended.
-     * @param {Ext.Media} this
-     * @param {Number} time The time at which the media ended at in seconds.
-     */
-
-    /**
-     * @event stop
-     * Fires whenever the media is stopped.
-     * The `pause` event will also fire after the `stop` event if the media is currently playing.
-     * The `timeupdate` event will also fire after the `stop` event regardless of playing status.
-     * @param {Ext.Media} this
-     */
-
-    /**
-     * @event volumechange
-     * Fires whenever the volume is changed.
-     * @param {Ext.Media} this
-     * @param {Number} volume The volume level from 0 to 1.
-     */
-
-    /**
-     * @event mutedchange
-     * Fires whenever the muted status is changed.
-     * The volumechange event will also fire after the `mutedchange` event fires.
-     * @param {Ext.Media} this
-     * @param {Boolean} muted The muted status.
-     */
-
-    /**
-     * @event timeupdate
-     * Fires when the media is playing every 15 to 250ms.
-     * @param {Ext.Media} this
-     * @param {Number} time The current time in seconds.
-     */
-
-    config: {
-        /**
-         * @cfg {String} url
-         * Location of the media to play.
-         * @accessor
-         */
-        url: '',
-
-        /**
-         * @cfg {Boolean} enableControls
-         * Set this to `false` to turn off the native media controls.
-         * Defaults to `false` when you are on Android, as it doesn't support controls.
-         * @accessor
-         */
-        enableControls: Ext.os.is.Android ? false : true,
-
-        /**
-         * @cfg {Boolean} autoResume
-         * Will automatically start playing the media when the container is activated.
-         * @accessor
-         */
-        autoResume: false,
-
-        /**
-         * @cfg {Boolean} autoPause
-         * Will automatically pause the media when the container is deactivated.
-         * @accessor
-         */
-        autoPause: true,
-
-        /**
-         * @cfg {Boolean} preload
-         * Will begin preloading the media immediately.
-         * @accessor
-         */
-        preload: true,
-
-        /**
-         * @cfg {Boolean} loop
-         * Will loop the media forever.
-         * @accessor
-         */
-        loop: false,
-
-        /**
-         * @cfg {Ext.Element} media
-         * A reference to the underlying audio/video element.
-         * @accessor
-         */
-        media: null,
-
-        /**
-         * @cfg {Number} volume
-         * The volume of the media from 0.0 to 1.0.
-         * @accessor
-         */
-        volume: 1,
-
-        /**
-         * @cfg {Boolean} muted
-         * Whether or not the media is muted. This will also set the volume to zero.
-         * @accessor
-         */
-        muted: false
-    },
-
-    constructor: function() {
-        this.mediaEvents = {};
-        this.callSuper(arguments);
-    },
-
-    initialize: function() {
-        var me = this;
-        me.callParent();
-
-        me.on({
-            scope: me,
-
-            activate  : me.onActivate,
-            deactivate: me.onDeactivate
-        });
-
-        me.addMediaListener({
-            canplay: 'onCanPlay',
-            play: 'onPlay',
-            pause: 'onPause',
-            ended: 'onEnd',
-            volumechange: 'onVolumeChange',
-            timeupdate: 'onTimeUpdate'
-        });
-    },
-
-    addMediaListener: function(event, fn) {
-        var me = this,
-            dom = me.media.dom,
-            bind = Ext.Function.bind;
-
-        Ext.Object.each(event, function(e, fn) {
-            fn = bind(me[fn], me);
-            me.mediaEvents[e] = fn;
-            dom.addEventListener(e, fn);
-        });
-    },
-
-    onPlay: function() {
-        this.fireEvent('play', this);
-    },
-
-    onCanPlay: function() {
-        this.fireEvent('canplay', this);
-    },
-
-    onPause: function() {
-        this.fireEvent('pause', this, this.getCurrentTime());
-    },
-
-    onEnd: function() {
-        this.fireEvent('ended', this, this.getCurrentTime());
-    },
-
-    onVolumeChange: function() {
-        this.fireEvent('volumechange', this, this.media.dom.volume);
-    },
-
-    onTimeUpdate: function() {
-        this.fireEvent('timeupdate', this, this.getCurrentTime());
-    },
-
-    /**
-     * Returns if the media is currently playing.
-     * @return {Boolean} playing `true` if the media is playing.
-     */
-    isPlaying: function() {
-        return !Boolean(this.media.dom.paused);
-    },
-
-    // @private
-    onActivate: function() {
-        var me = this;
-
-        if (me.getAutoResume() && !me.isPlaying()) {
-            me.play();
-        }
-    },
-
-    // @private
-    onDeactivate: function() {
-        var me = this;
-
-        if (me.getAutoPause() && me.isPlaying()) {
-            me.pause();
-        }
-    },
-
-    /**
-     * Sets the URL of the media element. If the media element already exists, it is update the src attribute of the
-     * element. If it is currently playing, it will start the new video.
-     */
-    updateUrl: function(newUrl) {
-        var dom = this.media.dom;
-
-        //when changing the src, we must call load:
-        //http://developer.apple.com/library/safari/#documentation/AudioVideo/Conceptual/Using_HTML5_Audio_Video/ControllingMediaWithJavaScript/ControllingMediaWithJavaScript.html
-
-        dom.src = newUrl;
-
-        if ('load' in dom) {
-            dom.load();
-        }
-
-        if (this.isPlaying()) {
-            this.play();
-        }
-    },
-
-    /**
-     * Updates the controls of the video element.
-     */
-    updateEnableControls: function(enableControls) {
-        this.media.dom.controls = enableControls ? 'controls' : false;
-    },
-
-    /**
-     * Updates the loop setting of the media element.
-     */
-    updateLoop: function(loop) {
-        this.media.dom.loop = loop ? 'loop' : false;
-    },
-
-    /**
-     * Starts or resumes media playback.
-     */
-    play: function() {
-        var dom = this.media.dom;
-
-        if ('play' in dom) {
-            dom.play();
-            setTimeout(function() {
-                dom.play();
-            }, 10);
-        }
-    },
-
-    /**
-     * Pauses media playback.
-     */
-    pause: function() {
-        var dom = this.media.dom;
-
-        if ('pause' in dom) {
-            dom.pause();
-        }
-    },
-
-    /**
-     * Toggles the media playback state.
-     */
-    toggle: function() {
-        if (this.isPlaying()) {
-            this.pause();
-        } else {
-            this.play();
-        }
-    },
-
-    /**
-     * Stops media playback and returns to the beginning.
-     */
-    stop: function() {
-        var me = this;
-
-        me.setCurrentTime(0);
-        me.fireEvent('stop', me);
-        me.pause();
-    },
-
-    //@private
-    updateVolume: function(volume) {
-        this.media.dom.volume = volume;
-    },
-
-    //@private
-    updateMuted: function(muted) {
-        this.fireEvent('mutedchange', this, muted);
-
-        this.media.dom.muted = muted;
-    },
-
-    /**
-     * Returns the current time of the media, in seconds.
-     * @return {Number}
-     */
-    getCurrentTime: function() {
-        return this.media.dom.currentTime;
-    },
-
-    /*
-     * Set the current time of the media.
-     * @param {Number} time The time, in seconds.
-     * @return {Number}
-     */
-    setCurrentTime: function(time) {
-        this.media.dom.currentTime = time;
-
-        return time;
-    },
-
-    /**
-     * Returns the duration of the media, in seconds.
-     * @return {Number}
-     */
-    getDuration: function() {
-        return this.media.dom.duration;
-    },
-
-    destroy: function() {
-        var me = this,
-            dom  = me.media.dom,
-            mediaEvents = me.mediaEvents;
-
-        Ext.Object.each(mediaEvents, function(event, fn) {
-            dom.removeEventListener(event, fn);
-        });
-
-        this.callSuper();
-    }
-});
-
-/**
- * {@link Ext.Audio} is a simple class which provides a container for the [HTML5 Audio element](http://developer.mozilla.org/en-US/docs/Using_HTML5_audio_and_video).
- *
- * ## Recommended File Types/Compression:
- * * Uncompressed WAV and AIF audio
- * * MP3 audio
- * * AAC-LC
- * * HE-AAC audio
- *
- * ## Notes
- * On Android devices, the audio tags controls do not show. You must use the {@link #method-play}, {@link #method-pause} and
- * {@link #toggle} methods to control the audio (example below).
- *
- * ## Examples
- *
- * Here is an example of the {@link Ext.Audio} component in a fullscreen container:
- *
- *     @example preview
- *     Ext.create('Ext.Container', {
- *         fullscreen: true,
- *         layout: {
- *             type : 'vbox',
- *             pack : 'center',
- *             align: 'stretch'
- *         },
- *         items: [
- *             {
- *                 xtype : 'toolbar',
- *                 docked: 'top',
- *                 title : 'Ext.Audio'
- *             },
- *             {
- *                 xtype: 'audio',
- *                 url  : 'touch/examples/audio/crash.mp3'
- *             }
- *         ]
- *     });
- *
- * You can also set the {@link #hidden} configuration of the {@link Ext.Audio} component to true by default,
- * and then control the audio by using the {@link #method-play}, {@link #method-pause} and {@link #toggle} methods:
- *
- *     @example preview
- *     Ext.create('Ext.Container', {
- *         fullscreen: true,
- *         layout: {
- *             type: 'vbox',
- *             pack: 'center'
- *         },
- *         items: [
- *             {
- *                 xtype : 'toolbar',
- *                 docked: 'top',
- *                 title : 'Ext.Audio'
- *             },
- *             {
- *                 xtype: 'toolbar',
- *                 docked: 'bottom',
- *                 defaults: {
- *                     xtype: 'button',
- *                     handler: function() {
- *                         var container = this.getParent().getParent(),
- *                             // use ComponentQuery to get the audio component (using its xtype)
- *                             audio = container.down('audio');
- *
- *                         audio.toggle();
- *                         this.setText(audio.isPlaying() ? 'Pause' : 'Play');
- *                     }
- *                 },
- *                 items: [
- *                     { text: 'Play', flex: 1 }
- *                 ]
- *             },
- *             {
- *                 html: 'Hidden audio!',
- *                 styleHtmlContent: true
- *             },
- *             {
- *                 xtype : 'audio',
- *                 hidden: true,
- *                 url   : 'touch/examples/audio/crash.mp3'
- *             }
- *         ]
- *     });
- * @aside example audio
- */
-Ext.define('Ext.Audio', {
-    extend: 'Ext.Media',
-    xtype : 'audio',
-
-    config: {
-        /**
-         * @cfg
-         * @inheritdoc
-         */
-        cls: Ext.baseCSSPrefix + 'audio'
-
-        /**
-         * @cfg {String} url
-         * The location of the audio to play.
-         *
-         * ### Recommended file types are:
-         * * Uncompressed WAV and AIF audio
-         * * MP3 audio
-         * * AAC-LC
-         * * HE-AAC audio
-         * @accessor
-         */
-    },
-
-    // @private
-    onActivate: function() {
-        var me = this;
-
-        me.callParent();
-
-        if (Ext.os.is.Phone) {
-            me.element.show();
-        }
-    },
-
-    // @private
-    onDeactivate: function() {
-        var me = this;
-
-        me.callParent();
-
-        if (Ext.os.is.Phone) {
-            me.element.hide();
-        }
-    },
-
-    template: [{
-        reference: 'media',
-        preload: 'auto',
-        tag: 'audio',
-        cls: Ext.baseCSSPrefix + 'component'
-    }]
-});
-
-/**
  * @class Ext.ComponentQuery
  * @extends Object
  * @singleton
@@ -58099,6 +57612,146 @@ Ext.define('Ext.data.proxy.LocalStorage', {
     }
 });
 
+/**
+ * The DelayedTask class provides a convenient way to "buffer" the execution of a method,
+ * performing `setTimeout` where a new timeout cancels the old timeout. When called, the
+ * task will wait the specified time period before executing. If during that time period,
+ * the task is called again, the original call will be canceled. This continues so that
+ * the function is only called a single time for each iteration.
+ *
+ * This method is especially useful for things like detecting whether a user has finished
+ * typing in a text field. An example would be performing validation on a keypress. You can
+ * use this class to buffer the keypress events for a certain number of milliseconds, and
+ * perform only if they stop for that amount of time.
+ *
+ * Using {@link Ext.util.DelayedTask} is very simple:
+ *
+ *     //create the delayed task instance with our callback
+ *     var task = Ext.create('Ext.util.DelayedTask', function() {
+ *         console.log('callback!');
+ *     });
+ *
+ *     task.delay(1500); //the callback function will now be called after 1500ms
+ *
+ *     task.cancel(); //the callback function will never be called now, unless we call delay() again
+ *
+ * ## Example
+ *
+ *     @example
+ *     //create a textfield where we can listen to text
+ *     var field = Ext.create('Ext.field.Text', {
+ *         xtype: 'textfield',
+ *         label: 'Length: 0'
+ *     });
+ *
+ *     //add the textfield into a fieldset
+ *     Ext.Viewport.add({
+ *         xtype: 'formpanel',
+ *         items: [{
+ *             xtype: 'fieldset',
+ *             items: [field],
+ *             instructions: 'Type into the field and watch the count go up after 500ms.'
+ *         }]
+ *     });
+ *
+ *     //create our delayed task with a function that returns the fields length as the fields label
+ *     var task = Ext.create('Ext.util.DelayedTask', function() {
+ *         field.setLabel('Length: ' + field.getValue().length);
+ *     });
+ *
+ *     // Wait 500ms before calling our function. If the user presses another key
+ *     // during that 500ms, it will be canceled and we'll wait another 500ms.
+ *     field.on('keyup', function() {
+ *         task.delay(500);
+ *     });
+ *
+ * @constructor
+ * The parameters to this constructor serve as defaults and are not required.
+ * @param {Function} fn The default function to call.
+ * @param {Object} scope The default scope (The `this` reference) in which the function is called. If
+ * not specified, `this` will refer to the browser window.
+ * @param {Array} args The default Array of arguments.
+ */
+Ext.define('Ext.util.DelayedTask', {
+    config: {
+        interval: null,
+        delay: null,
+        fn: null,
+        scope: null,
+        args: null
+    },
+
+    constructor: function(fn, scope, args) {
+        var config = {
+            fn: fn,
+            scope: scope,
+            args: args
+        };
+
+        this.initConfig(config);
+    },
+
+    /**
+     * Cancels any pending timeout and queues a new one.
+     * @param {Number} delay The milliseconds to delay
+     * @param {Function} newFn Overrides the original function passed when instantiated.
+     * @param {Object} newScope Overrides the original `scope` passed when instantiated. Remember that if no scope
+     * is specified, `this` will refer to the browser window.
+     * @param {Array} newArgs Overrides the original `args` passed when instantiated.
+     */
+    delay: function(delay, newFn, newScope, newArgs) {
+        var me = this;
+
+        //cancel any existing queued functions
+        me.cancel();
+            
+        //set all the new configurations
+        me.setConfig({
+            delay: delay,
+            fn: newFn,
+            scope: newScope,
+            args: newArgs
+        });
+
+        //create the callback method for this delayed task
+        var call = function() {
+            me.getFn().apply(me.getScope(), me.getArgs() || []);
+            me.cancel();
+        };
+
+        me.setInterval(setInterval(call, me.getDelay()));
+    },
+
+    /**
+     * Cancel the last queued timeout
+     */
+    cancel: function() {
+        this.setInterval(null);
+    },
+
+    /**
+     * @private
+     * Clears the old interval
+     */
+    updateInterval: function(newInterval, oldInterval) {
+        if (oldInterval) {
+            clearInterval(oldInterval);
+        }
+    },
+
+    /**
+     * @private
+     * Changes the value into an array if it isn't one.
+     */
+    applyArgs: function(config) {
+        if (!Ext.isArray(config)) {
+            config = [config];
+        }
+
+        return config;
+    }
+});
+
 // Using @mixins to include all members of Ext.event.Touch
 // into here to keep documentation simpler
 /**
@@ -63255,8 +62908,7 @@ Ext.define('ToDoAlpha.controller.Timeline', {
     extend: 'Ext.app.Controller',
     
     requires:['ToDoAlpha.view.control.AddOnTimeline', 
-      'ToDoAlpha.view.control.HourButton',
-      'Ext.Audio'],
+      'ToDoAlpha.view.control.HourButton'],
     
     config: {
         refs: {
@@ -63299,7 +62951,8 @@ Ext.define('ToDoAlpha.controller.Timeline', {
     	   minute = textField.config.minute;
     	
     	var top = Timeline.Controler.getConAddTimeline().getTop();
-    	var time = Ext.Date.add(Ext.Date.clearTime(new Date(), true), Ext.Date.HOUR, hour),
+    	var date = Calendar.selectedDate ? Calendar.selectedDate : new Date(),
+    	  time = Ext.Date.add(Ext.Date.clearTime(date, true), Ext.Date.HOUR, hour),
     		rStore = Ext.getStore('Reminders'),
     		hourIndicator;
     	if(minute != undefined && minute != null){
@@ -63354,13 +63007,6 @@ Ext.define('ToDoAlpha.controller.Timeline', {
     	var hour = button.getHour();
     	var selector = '.minute-indicator-' + hour + ', .minute-indicator-' + (hour - 1);
     	this.populateTimeStepRegions(selector);
-    	
-//    	var indicator = Ext.create('Ext.Component', {
-//    		style: 'z-index:99; width: 50px; height: 12px; background-color: yellow; top: ' + (button.hour - 8) * App.config.defaultHourSpace + 'px; position: absolute',
-//    		draggable: {
-//                direction: 'vertical',
-//    		}});
-//    	this.getConMainLine().add(indicator);
 
       // var sound = Ext.create('Ext.Audio',{
        // url: '../resources/sound/facebook_ringtone_pop.m4a',
@@ -63389,10 +63035,6 @@ Ext.define('ToDoAlpha.controller.Timeline', {
                 scope:   Timeline.Controler
             }
 		});
-
-    	//button.fireEvent('dragstart', button);
-    	//indicator.fireEvent('dragstart', indicator);
-    	//console.log(button);
     },
     onHourDragstart: function(draggable, e, offset, eOpts){
       Timeline.dragButton.setText('');
@@ -63400,12 +63042,6 @@ Ext.define('ToDoAlpha.controller.Timeline', {
     	Timeline.isHourDragging = true;
     },
     onHourDrag: function(draggable, e, offsetX, offsetY, eOpts){
-//    	if(offsetY % 20 == 0 && Math.abs(offsetY) <= App.config.defaultHourSpace){
-//    		console.log(draggable, e, offsetX, offsetY, eOpts);
-//    		var pos = (Timeline.dragButton.hour - 8) * App.config.defaultHourSpace + offsetY;
-//    		Timeline.indicator.setTop(pos);
-//    	}
-
     	var items = Timeline.minuteIndicators,
 			ln = items.length,
 			pageBoxRegion = draggable.getElement().getPageBox(true),
@@ -63509,6 +63145,177 @@ Ext.define('ToDoAlpha.controller.Todo', {
     }
 });
 
+Ext.define('ToDoAlpha.controller.Calendar', {
+    extend: 'Ext.app.Controller',
+    
+    requires:['Ext.util.DelayedTask'],
+    
+    config: {
+        refs: {
+          conCalendar: '#conCalendar',
+          dayHeaderButton: '#headerDay',
+          conDayPicker: '#conDayPicker',
+          conMonthPicker: '#conMonthPicker',
+          conTimeline: '#conTimeline',
+          buttonHeaderTime: '#headerTime',
+          comHeaderToday: '#headerToday'
+        },
+        control: {
+            dayHeaderButton: {
+              tap: 'onDayHeaderTap'
+            },
+            conDayPicker: {
+              initialize: 'onDayPickerInit'
+            }
+        }
+    },
+    launch: function(){
+        //this.callParent(arguments);
+    //Timeline.Controler = this;
+    Calendar.selectedDate = new Date();
+    Calendar.selectedMonth = Calendar.selectedDate.getMonth();
+    Calendar.selectedDay = Calendar.selectedDate.getDate();
+      var monthPicker = this.getConMonthPicker(),
+        scroller = monthPicker.getScrollable().getScroller();
+      scroller.on({
+          scrollend: this.onMonthPickerScrollEnd,
+          scope: this
+      });
+      var conDayPicker = this.getConDayPicker(),
+        scroller = conDayPicker.getScrollable().getScroller();
+      scroller.on({
+          scrollend: this.onDayPickerScrollEnd,
+          scope: this
+      });
+    },
+    onDayHeaderTap: function(button, e, eOpts){
+      this.getConDayPicker().removeCls('fade-out-500');
+      this.getConMonthPicker().removeCls('fade-out-500');
+      this.getConDayPicker().show('fade');
+      this.getConMonthPicker().show('fade');
+    },
+    onDayPickerInit: function(){
+      Ext.namespace('Calendar');
+      this.paintDaysInMonth(new Date());
+    },
+    onDayPickerScrollEnd: function(scroller, x, y, eOpts){
+      var dayHeight = 55,
+          treehold = 30;
+      var phanDu =y%dayHeight;
+      if(phanDu > 0){ 
+        if(phanDu < treehold || dayHeight - phanDu < treehold){
+          if(phanDu < treehold){
+            scroller.scrollTo(0, y - phanDu, true);
+          }else if (dayHeight - phanDu < treehold){
+            scroller.scrollTo(0, y + (dayHeight -phanDu), true);
+          }
+        }
+      }else{
+        var selectedDayDate; 
+        if(Calendar.selectedMonth > new Date().getMonth()){ 
+          selectedDayDate = Ext.Date.add(new Date(2013, Calendar.selectedMonth, (y/dayHeight) + 1));
+        }else{
+          selectedDayDate = Ext.Date.add(new Date(), Ext.Date.DAY, y/dayHeight);
+        }
+        Calendar.selectedDay = selectedDayDate.getDate();
+        this.refreshCalendar();
+      }
+    },
+    onMonthPickerScrollEnd: function(scroller, x, y, eOpts){
+      var monthWidth = 92,
+          treehold = 55;
+      var phanDu =x%monthWidth;
+      if(phanDu>0){
+        if(phanDu < treehold || monthWidth - phanDu < treehold){
+          if(phanDu < treehold){
+            scroller.scrollTo(x - phanDu, 0, true);
+          }else if (monthWidth - phanDu < treehold){
+            scroller.scrollTo(x + (monthWidth -phanDu), 0, true);
+          }
+        }
+      }else{
+        var selectedMonthDate = Ext.Date.add(new Date(), Ext.Date.MONTH, x/monthWidth);
+        this.paintDaysInMonth(selectedMonthDate);
+        Calendar.selectedMonth = selectedMonthDate.getMonth();
+        this.refreshCalendar();
+      }
+    },
+    paintDaysInMonth: function(date){
+      var me = this,
+        conDayPicker = this.getConDayPicker(),
+        screenHeight = Ext.getBody().getSize().height,
+        now =  date,
+        daysInMonth = Ext.Date.getDaysInMonth(now),
+        currentDay = now.getDate(),
+        month = now.getMonth(),
+        daysLeft,
+        dayHeight = 55;
+      var y = this.getConDayPicker().getScrollable().getScroller().position.y;
+      if(month > new Date().getMonth()){
+        currentDay = 1;
+        now = new Date(now.getFullYear(), month);
+        Calendar.selectedDay = y/dayHeight + 1;
+      }else{
+        Calendar.selectedDay = y/dayHeight + currentDay;
+      }
+      daysLeft = daysInMonth - currentDay;
+        
+      conDayPicker.setHeight(screenHeight);
+      conDayPicker.removeAll(true,true);
+      
+      for(var i = 0; i <= daysLeft; i ++){
+        var day = i+currentDay,
+          style = '';
+        day = day< 10 ? '0'+day : day;
+        if(Ext.Date.format(Ext.Date.add(now, Ext.Date.DAY, i), 'N') > 5){
+          style = 'color: rgb(245, 138, 138)'
+        }
+        conDayPicker.add(Ext.create('Ext.Component', {
+          html: day,
+          height: '55px',
+          style: style,
+          listeners: {
+            element: 'element',
+            tap: function(event){ 
+                var scroller = me.getConDayPicker().getScrollable().getScroller(),
+                  scrollto = event.pageY + scroller.position.y;
+                  if(scrollto%dayHeight > 0){
+                    scrollto = scrollto - scrollto%dayHeight;
+                  }
+                scroller.scrollTo(0,scrollto, true);
+              }
+          }
+        }));
+      }
+      conDayPicker.add(Ext.create('Ext.Component', {
+          height: screenHeight - AppConfig.timelineHeaderHeight
+        }));
+      
+    },
+    refreshCalendar: function(){
+      var me = this;
+      //TODO: fix the harcoded 2013 
+      Calendar.selectedDate = new Date(2013, Calendar.selectedMonth, Calendar.selectedDay);
+      if(Ext.Date.getElapsed(Ext.Date.clearTime(new Date(), true), Calendar.selectedDate) == 0){
+        Calendar.selectedDate = new Date();
+        me.getButtonHeaderTime().show();
+        me.getComHeaderToday().show();
+      }else{
+        me.getButtonHeaderTime().hide();
+        me.getComHeaderToday().hide();
+      }
+      me.getConCalendar().setHeaderDate(Calendar.selectedDate);
+      me.getConTimeline().setMasked(true);
+      //me.getConTimeline().addCls('fade-out-500');
+      var task = Ext.create('Ext.util.DelayedTask', function() {
+        me.getConTimeline().paintTimeline();
+        me.getConTimeline().setMasked(false);
+        //me.getConTimeline().removeCls('fade-out-500');
+      });
+      task.delay(0);
+    }
+});
+
 Ext.define('ToDoAlpha.model.Task', {
     extend: 'Ext.data.Model',
     requires: ['Ext.data.identifier.Uuid'],
@@ -63607,11 +63414,11 @@ Ext.define('ToDoAlpha.view.control.Event', {
       for (var i = 0; i < events.length ; i ++){
         if(container.getId() == Ext.get(events[i]).getId()){
           container.addCls('removing-task');
+          rStore.remove(data[i]);
+          rStore.sync();
           var checkIcon = Ext.create('Ext.Component',{top: container.getTop(), cls: 'check-icon'});
           container.getParent().add(checkIcon);
           setTimeout(function(){
-            rStore.remove(data[i]);
-            rStore.sync();
             container.destroy();
             checkIcon.destroy();
             },900);
@@ -63656,13 +63463,7 @@ Ext.define('ToDoAlpha.view.Timeline', {
  	        {
           	xtype: 'container',
           	id: 'conTaskList',
-          	width: '80%',
-          	items: [
-              {
-                xtype: 'addtimeline'
-              }
-          	]
-          	//style: 'background-color: lightgrey'
+          	width: '80%'
           },
  	        {
  	            xtype: 'container',
@@ -63683,97 +63484,106 @@ Ext.define('ToDoAlpha.view.Timeline', {
     initialize: function() {
     	this.callParent(arguments);
       Ext.namespace('Timeline');
+      this.paintTimeline();
+    },
+    paintTimeline: function(){
+      this.child('#conTaskList').removeAll(true, true);
+      this.child('#conMainLine').removeAll(true, true);
+      this.child('#conTimeList').removeAll(true, true);
+      this.child('#conTaskList').add(Ext.create('ToDoAlpha.view.control.AddOnTimeline'));
+      var date = Calendar.selectedDate ? Calendar.selectedDate : new Date();
       
-    	//Load tasks to today timeline
-    	var rStore = Ext.getStore('Reminders');
-    	rStore.sort('tasktime', 'ASC');
-    	rStore.filter([
-    	                  {property: 'isontimeline', value: true},
-    	                  {property: 'iscompleted', value: false},
-    	                  {filterFn: function(item) { return item.get('tasktime') >= new Date() && Ext.Date.format(item.get('tasktime'), 'Y-m-d') == Ext.Date.format(new Date(), 'Y-m-d');}}
-    	              ]);
-    	rStore.load(function(records, operation, success) {
-    		//Paint list time
-    	    var currentDate = new Date();//Ext.Date.add(new Date(),Ext.Date.HOUR, -10);
-    	    var	currentHour = parseInt(Ext.Date.format(currentDate, 'G')),
-    	    	currentMinute = parseInt(Ext.Date.format(currentDate, 'i'));
-    	    	//firstTaskHour = parseInt(Ext.Date.format(records[0].data.tasktime, 'G'));
-    	    var appConfig = AppConfig,
-    	    	startH = currentHour + 1,
-    	    	mLeft = 0,
-    	    	i = 0;
-        	for(i = startH; i <= appConfig.todayEndTime; i ++){
-        		var hHtml = '';
-        		var hTop = (i - startH) * appConfig.defaultHourSpace;
-        		if(i > 12){
-        			hHtml += i - 12 + '<span style="font-size:0.7em; line-height: 1px">PM<span>';
-        		}else{
-        			hHtml += i +  '<span style="font-size:0.7em; line-height: 1px">AM<span>';
-        		}
-        		if (i == startH){
-        			//calculate the space left of comming hour
-        			mLeft = (60 - currentMinute) ;
-        			mLeft = mLeft % appConfig.timeStep == 0 ? mLeft : mLeft - mLeft % appConfig.timeStep;
-        			mLeft = mLeft * appConfig.defaultHourSpace / 60;
-        		}
-        		hTop += mLeft;
-        		var hourButton = Ext.create('ToDoAlpha.view.control.HourButton',{
-        		  id: 'hourButton'+i,
-        			text: hHtml,
-        			top: hTop,
-        			hour: i});
-        		this.child('#conTimeList').add(hourButton);
-        		this.paintTimeSteps(appConfig.defaultHourSpace, hTop, false, i);
-        	}
-        	this.paintTimeSteps(mLeft, 0, true, currentHour);
-        	var calendarHeight = ((i - startH) * appConfig.defaultHourSpace) + mLeft;
-        	this.setHeight(calendarHeight);
-        	
-        	//Paint list task
-        	var isDupTime = false,
-        	     prevContainer = null;
-        	for(i = 0; i < records.length; i ++){
-        		var h = parseInt(Ext.Date.format(records[i].data.tasktime, 'G')),
-        			m = parseInt(Ext.Date.format(records[i].data.tasktime, 'i')),
-        			prevM, prevH;
-        		var iTop = ((h - startH) * appConfig.defaultHourSpace) + (m * (appConfig.defaultHourSpace / 60)) + mLeft;
-        		this.child('#conMainLine').add(Ext.create('Ext.Component',{ top: iTop, cls: 'event-indicator'}));
-        		if(m > 0){
-        		  var h12 = AppHelper.getHour12(h),
-        		  html = h12.hour + ':' + m + '<span style="font-size:0.7em; line-height: 1px"><br/><span>';
-        		  var hourButton = Ext.create('Ext.Button',{
+      //Load tasks to today timeline
+      var rStore = Ext.getStore('Reminders');
+      rStore.clearFilter(false);
+      rStore.sort('tasktime', 'ASC');
+      rStore.filter([
+                        {property: 'isontimeline', value: true},
+                        {property: 'iscompleted', value: false},
+                        {filterFn: function(item) { return item.get('tasktime') >= date && Ext.Date.format(item.get('tasktime'), 'Y-m-d') == Ext.Date.format(date, 'Y-m-d');}}
+                    ]);
+      rStore.load(function(records, operation, success) {
+        //Paint list time
+          //var currentDate = new Date();//Ext.Date.add(new Date(),Ext.Date.HOUR, -10);
+          var currentHour = parseInt(Ext.Date.format(date, 'G')),
+            currentMinute = parseInt(Ext.Date.format(date, 'i'));
+            //firstTaskHour = parseInt(Ext.Date.format(records[0].data.tasktime, 'G'));
+          var appConfig = AppConfig,
+            startH = currentHour + 1,
+            mLeft = 0,
+            i = 0;
+          for(i = startH; i <= appConfig.todayEndTime; i ++){
+            var hHtml = '';
+            var hTop = (i - startH) * appConfig.defaultHourSpace;
+            if(i > 12){
+              hHtml += i - 12 + '<span style="font-size:0.7em; line-height: 1px">PM<span>';
+            }else{
+              hHtml += i +  '<span style="font-size:0.7em; line-height: 1px">AM<span>';
+            }
+            if (i == startH){
+              //calculate the space left of comming hour
+              mLeft = (60 - currentMinute) ;
+              mLeft = mLeft % appConfig.timeStep == 0 ? mLeft : mLeft - mLeft % appConfig.timeStep;
+              mLeft = mLeft * appConfig.defaultHourSpace / 60;
+            }
+            hTop += mLeft;
+            var hourButton = Ext.create('ToDoAlpha.view.control.HourButton',{
+              id: 'hourButton'+i,
+              text: hHtml,
+              top: hTop,
+              hour: i});
+            this.child('#conTimeList').add(hourButton);
+            this.paintTimeSteps(appConfig.defaultHourSpace, hTop, false, i);
+          }
+          this.paintTimeSteps(mLeft, 0, true, currentHour);
+          var calendarHeight = ((i - startH) * appConfig.defaultHourSpace) + mLeft;
+          this.setHeight(calendarHeight);
+          
+          //Paint list task
+          var isDupTime = false,
+               prevContainer = null;
+          for(i = 0; i < records.length; i ++){
+            var h = parseInt(Ext.Date.format(records[i].data.tasktime, 'G')),
+              m = parseInt(Ext.Date.format(records[i].data.tasktime, 'i')),
+              prevM, prevH;
+            var iTop = ((h - startH) * appConfig.defaultHourSpace) + (m * (appConfig.defaultHourSpace / 60)) + mLeft;
+            this.child('#conMainLine').add(Ext.create('Ext.Component',{ top: iTop, cls: 'event-indicator'}));
+            if(m > 0){
+              var h12 = AppHelper.getHour12(h),
+              html = h12.hour + ':' + m + '<span style="font-size:0.7em; line-height: 1px"><br/><span>';
+              var hourButton = Ext.create('Ext.Button',{
                 text: html,
                 top: iTop,
                 ui: 'plain',
                 pressedCls: '',
                 cls: 'hour-white'});
-        			this.child('#conTimeList').add(hourButton);
-        		}else{
-        		  var hButton = Ext.ComponentQuery.query('#hourButton' + h)[0];
-        		  if(hButton != undefined){
-        		    hButton.setCls('hour-white');
-        		  }
-        		}
-        		//Merge time gan nhau
-        		if(i > 0){
-        		   prevM = parseInt(Ext.Date.format(records[i-1].data.tasktime, 'i'));
-        		   prevH = parseInt(Ext.Date.format(records[i-1].data.tasktime, 'G'));
-        		}
-        		if(prevM != undefined && prevH != undefined && ((m - prevM == 10 && h == prevH) || (m - prevM == -50 && h - prevH == 1))){
+              this.child('#conTimeList').add(hourButton);
+            }else{
+              var hButton = Ext.ComponentQuery.query('#hourButton' + h)[0];
+              if(hButton != undefined){
+                hButton.setCls('hour-white');
+              }
+            }
+            //Merge time gan nhau
+            if(i > 0){
+               prevM = parseInt(Ext.Date.format(records[i-1].data.tasktime, 'i'));
+               prevH = parseInt(Ext.Date.format(records[i-1].data.tasktime, 'G'));
+            }
+            if(prevM != undefined && prevH != undefined && ((m - prevM == 10 && h == prevH) || (m - prevM == -50 && h - prevH == 1))){
               if(prevContainer == null){
                 prevContainer = Ext.getCmp('event-container-' + prevH + '-' + prevM);
               }
               prevContainer.setHtml(prevContainer.getHtml() + '<br/>' + records[i].get('title').trunc(30));
-        		}else{
-        		  prevContainer = null;
+            }else{
+              prevContainer = null;
               this.child('#conTaskList').add(Ext.create('ToDoAlpha.view.control.Event',{
                 id: 'event-container-' + h + '-' + m,
                 top: iTop,
                 html: records[i].get('title').trunc(30)
               }));
-        		}
-        	}
-    	}, this);	
+            }
+          }
+      }, this); 
     },
     paintTimeSteps: function(hourSpace, top, isFirstHour, hour){
   		var appConfig = AppConfig,
@@ -63798,10 +63608,70 @@ Ext.define('ToDoAlpha.view.Timeline', {
     }
 });
 
+Ext.define('ToDoAlpha.view.control.DayPicker', {
+    extend: 'Ext.Container',
+    xtype: 'daypicker',
+    requires:['Ext.Component'],
+    config: {
+      id: 'conDayPicker',
+      hidden: true,
+      cls: 'day-picker',
+      scrollable: true
+    }
+});
+
+Ext.define('ToDoAlpha.view.control.MonthPicker', {
+    extend: 'Ext.Container',
+    xtype: 'monthpicker',
+    requires:['Ext.Component'],
+    config: {
+      layout: 'hbox',
+      hidden: true,
+      id: 'conMonthPicker',
+      cls: 'month-picker',
+      scrollable: true
+    },
+    initialize: function(){
+      var me = this,
+        screenWidth = Ext.getBody().getSize().width,
+        monthWidth = 92;
+      this.setWidth(screenWidth);
+      this.callParent(arguments);
+      this.add(Ext.create('Ext.Component', {
+          width: '55px'
+        }));
+      var currentMonth = parseInt(Ext.Date.format(new Date(), 'n')),
+        monthsLeft = 12 - currentMonth;
+      for(var i = 0; i <= monthsLeft; i ++){
+        var month = i+currentMonth;
+        this.add(Ext.create('Ext.Component', {
+          html: AppHelper.getLongMonthName(month).toUpperCase() ,
+          width: monthWidth + 'px',
+          listeners: {
+            element: 'element',
+            tap: function(event){ 
+                var scroller = me.getScrollable().getScroller(),
+                  buffer = AppHelper.isPhone() ? 55 : 155,
+                  scrollto = event.pageX + scroller.position.x - buffer;
+                  if(scrollto%monthWidth > 0){
+                    scrollto = scrollto - scrollto%monthWidth;
+                  }
+                scroller.scrollTo(scrollto, 0, true);
+              }
+          }
+        }));
+      }
+      this.add(Ext.create('Ext.Component', {
+          width: monthWidth * (monthsLeft-1)
+        }));
+      
+    }
+});
+
 Ext.define('ToDoAlpha.view.Calendar', {
 	extend : 'Ext.Container',
 	xtype : 'calendar',
-	requires : [ 'ToDoAlpha.view.Timeline', 'Ext.Spacer' ],
+	requires : [ 'ToDoAlpha.view.Timeline', 'Ext.Spacer', 'ToDoAlpha.view.control.DayPicker', 'ToDoAlpha.view.control.MonthPicker'],
 	config : {
 		//style : 'background-color: green',
 		scrollable : true,
@@ -63814,8 +63684,15 @@ Ext.define('ToDoAlpha.view.Calendar', {
 			cls: 'timeline-header',
 			layout: 'hbox',
 			items: [
+             {
+               xtype: 'component',
+               id: 'headerToday',
+              cls:'today-text',
+              html: 'TODAY'
+             },
 		        {
-		        	xtype : 'component',
+		        	xtype : 'button',
+		        	ui: 'plain',
 		        	id: 'headerDay'
 		        },
 		        {
@@ -63824,7 +63701,13 @@ Ext.define('ToDoAlpha.view.Calendar', {
 		        {
 		        	xtype : 'component',
 		        	id: 'headerTime'
-		        }
+		        },
+            {
+              xtype: 'daypicker'
+            },
+            {
+              xtype: 'monthpicker'
+            }
 			        ]
 		}, 
 //		{
@@ -63835,11 +63718,13 @@ Ext.define('ToDoAlpha.view.Calendar', {
 		{
 			xtype : 'timeline',
 			id: 'conTimeline'
-		} ]
+		}
+		]
 	},
 	initialize : function() {
 		this.callParent(arguments);
-		
+	  Ext.namespace('Calendar');
+	  Calendar.container = this;
     var scroller = this.getScrollable().getScroller();
     scroller.on({
       scroll: this.onScrollChange,
@@ -63849,16 +63734,19 @@ Ext.define('ToDoAlpha.view.Calendar', {
 		var date = new Date();
 		//var todayHtml = '<div class="day-header">TODAY</div><div class="day-header-details" style="margin-top:13px">'+ 
 			//Ext.Date.format(date, 'M') + '<br/>' + Ext.Date.format(date, 'j') +'</div>';
-			var todayHtml = '<span class="today-text">TODAY</span><div class="day-header"> ' + Ext.Date.format(date, 'd') + '</div><div class="day-header-details"><span style=" \
-            font-size: 0.9em; \
-        ">' + Ext.Date.format(date, 'F').toUpperCase() + '</span> \
-        <br><span style=" \
+			this.setHeaderDate(date);
+			this.setCurrentTime();
+	},
+	setHeaderDate: function(date){
+	  var todayHtml = '<div id="divDayNumberText" class="day-header"> ' + Ext.Date.format(date, 'd') + '</div><div class="day-header-details">\
+      <span id="spanMonthText" style="font-size: 0.9em;">' 
+      + Ext.Date.format(date, 'F').toUpperCase() + '</span> \
+        <br><span id="spanWeedDayText" style=" \
             font-weight: bolder; \
             font-size: 1.4em; \
         ">' + Ext.Date.format(date, 'l').toUpperCase() +'</span> \
         </div>';
-		this.down('#headerDay').setHtml(todayHtml);
-		this.setCurrentTime();
+    this.down('#headerDay').setHtml(todayHtml);
 	},
     setCurrentTime: function(){
     	var me = this;
@@ -64043,7 +63931,7 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
     	Todo.listItem.draggedClock = button;
     	//button.setTop(event.pageY);
     	//button.setLeft(event.pageX);
-    	var left = AppHelper.isPhone() ? Ext.getBody().getSize().width - 20 : event.pageX - 160,
+    	var left = AppHelper.isPhone() ? Ext.getBody().getSize().width - 60 : event.pageX - 160,
     		top = event.pageY - 20;
     	var listItem = button.getParent();
     	button.setStyle('top: ' + top + 'px; left: ' + left + 'px; position: absolute; overflow: visible');
@@ -64287,10 +64175,15 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
 //        
     // },
     deleteTask: function(deleteButton){
-      var tStore = Ext.getStore('Tasks');
+      var tStore = Ext.getStore('Tasks'),
+         listItem = deleteButton.getParent(),
+         buttonClock = listItem.getAt(1),
+         buttonDelete = listItem.getAt(2);
+      buttonClock.hide();
+      buttonDelete.hide();
       Ext.Anim.run(this, 'fade', {
           after: function(){
-            tStore.remove(deleteButton.getParent().getRecord());
+            tStore.remove(listItem.getRecord());
             tStore.sync();
             }
       });
@@ -64554,8 +64447,18 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
         }],
         listeners: {
               element: 'element',
-              tap: function () {
+              tap: function (e, eOpts) {
                 //console.log(Ext.ComponentQuery.query('#listTodo > button'))//.hide('fade');
+                //Hide month & day picker
+                var xTreeHold = AppHelper.isPhone() ? 70 : 175;
+                if(e.pageX > xTreeHold && e.pageY > 55){
+                  Ext.getCmp('conDayPicker').addCls('fade-out-500');
+                  Ext.getCmp('conMonthPicker').addCls('fade-out-500');
+                  setTimeout(function(){
+                    Ext.getCmp('conDayPicker').hide();
+                    Ext.getCmp('conMonthPicker').hide();
+                  },500);
+                }
               }
         }
 	},
@@ -64686,7 +64589,7 @@ Ext.application({
     ],
 
     views: ['Main'],
-    controllers: ['Timeline', 'Todo'],
+    controllers: ['Timeline', 'Todo', 'Calendar'],
     models: ['Task'],
     stores: ['Tasks', 'Reminders'],
     icon: {
