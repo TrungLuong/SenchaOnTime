@@ -63158,7 +63158,8 @@ Ext.define('ToDoAlpha.controller.Calendar', {
           conMonthPicker: '#conMonthPicker',
           conTimeline: '#conTimeline',
           buttonHeaderTime: '#headerTime',
-          comHeaderToday: '#headerToday'
+          comHeaderToday: '#headerToday',
+          conMain: '#conMain'
         },
         control: {
             dayHeaderButton: {
@@ -63305,11 +63306,11 @@ Ext.define('ToDoAlpha.controller.Calendar', {
         me.getComHeaderToday().hide();
       }
       me.getConCalendar().setHeaderDate(Calendar.selectedDate);
-      me.getConTimeline().setMasked(true);
+      me.getConMain().setMasked(true);
       //me.getConTimeline().addCls('fade-out-500');
       var task = Ext.create('Ext.util.DelayedTask', function() {
         me.getConTimeline().paintTimeline();
-        me.getConTimeline().setMasked(false);
+        me.getConMain().setMasked(false);
         //me.getConTimeline().removeCls('fade-out-500');
       });
       task.delay(0);
