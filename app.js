@@ -63320,7 +63320,7 @@ Ext.define('ToDoAlpha.controller.Calendar', {
       me.getConCalendar().setHeaderDate(Calendar.selectedDate);
       me.getConMain().setMasked(true);
       //me.getConTimeline().addCls('fade-out-500');
-      task.delay(0);
+      task.delay(3000);
     }
 });
 
@@ -63528,6 +63528,7 @@ Ext.define('ToDoAlpha.view.Timeline', {
             startH = currentHour + 1,
             mLeft = 0,
             i = 0;
+          startH = startH < AppConfig.todayStartTime ? AppConfig.todayStartTime : startH;
           for(i = startH; i <= appConfig.todayEndTime; i ++){
             var hHtml = '';
             var hTop = (i - startH) * appConfig.defaultHourSpace;
@@ -63647,6 +63648,7 @@ Ext.define('ToDoAlpha.view.Timeline', {
           this.child('#conTaskList').setHtml('');
         }else{
           this.child('#conTaskList').setHtml('<span style="margin: 20px;line-height: 4em;opacity: 0.7;">Nothing todo this day...</span>');
+          me.setHeight(200);
           return;
         }
         //Paint list task
@@ -63881,12 +63883,16 @@ Ext.define('ToDoAlpha.view.Calendar', {
         this.slectedMenu = - 1;
       }else if(this.slectedMenu == 2){
         this.slectedMenu = - 1;
-        var html;
-        if(Timeline.collapsed){
-          Ext.getCmp('conTimeline').paintTimeline();
-        }else{
-          Ext.getCmp('conTimeline').paintCollapsedTimeline();
-        }
+        Ext.getCmp('conMain').setMasked(true);
+        var task = Ext.create('Ext.util.DelayedTask', function() {
+          if(Timeline.collapsed){
+            Ext.getCmp('conTimeline').paintTimeline();
+          }else{
+            Ext.getCmp('conTimeline').paintCollapsedTimeline();
+          }
+          Ext.getCmp('conMain').setMasked(false);
+        });
+        task.delay(0);
       }
     }
 });
