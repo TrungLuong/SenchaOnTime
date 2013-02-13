@@ -8390,10 +8390,19 @@ input {
   font-size: 0.9em;
   background-image: url("../../resources/images/400Gradient2.png") !important;
   position: absolute;
-  width: 93%;
+  width: 91%;
   border-radius: 3px;
   padding: 8px 10px 8px 10px;
   margin: -5px 0 0 10px;
+}
+
+.timeline-event-collapsed {
+  font-size: 0.9em;
+  background-image: url("../../resources/images/400Gradient2.png") !important;
+  width: 91%;
+  border-radius: 3px;
+  padding: 8px 10px 8px 10px;
+  margin: 10px 0px 10px 10px;
 }
 
 .timeline-event::after {
@@ -8408,6 +8417,17 @@ input {
   border-width: 6px 0 6px 6px;
   border-style: solid;
   border-color: transparent #84daff;
+}
+
+.timeline-event-collapsed::before {
+  content: "";
+  opacity: 0.17;
+  position: relative;
+  left: 16px;
+  border-width: 6px 0 6px 6px;
+  border-style: solid;
+  border-color: transparent #84daff;
+  float: right;
 }
 
 #headerDay {

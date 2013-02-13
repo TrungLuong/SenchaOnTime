@@ -62984,11 +62984,13 @@ Ext.define('ToDoAlpha.controller.Timeline', {
               }
         }
 	    	Timeline.Controler.getConMainLine().add(Ext.create('Ext.Component',{ top: top, cls: 'event-indicator'}));
-    		Timeline.Controler.getConTaskList().add(Ext.create('ToDoAlpha.view.control.Event',{
-    		  id: 'event-container-' + h + '-' + m,
-    			top: top,
-    			html: title.trunc(30)
-    		}));
+	    	var event= Ext.create('ToDoAlpha.view.control.Event',{
+          id: 'event-container-' + h + '-' + m,
+          top: top,
+          html: title.trunc(30)
+        });
+        event.addCls('timeline-event')
+    		Timeline.Controler.getConTaskList().add(event);
     	}else{
     		Timeline.Controler.getConAddTimeline().hide();
     	}
@@ -63294,25 +63296,30 @@ Ext.define('ToDoAlpha.controller.Calendar', {
       
     },
     refreshCalendar: function(){
-      var me = this;
+      var me = this, task;
       //TODO: fix the harcoded 2013 
       Calendar.selectedDate = new Date(2013, Calendar.selectedMonth, Calendar.selectedDay);
       if(Ext.Date.getElapsed(Ext.Date.clearTime(new Date(), true), Calendar.selectedDate) == 0){
         Calendar.selectedDate = new Date();
         me.getButtonHeaderTime().show();
         me.getComHeaderToday().show();
+        task = Ext.create('Ext.util.DelayedTask', function() {
+          me.getConTimeline().paintTimeline();
+          me.getConMain().setMasked(false);
+          //me.getConTimeline().removeCls('fade-out-500');
+        });
       }else{
         me.getButtonHeaderTime().hide();
         me.getComHeaderToday().hide();
+        task = Ext.create('Ext.util.DelayedTask', function() {
+          me.getConTimeline().paintCollapsedTimeline();
+          me.getConMain().setMasked(false);
+          //me.getConTimeline().removeCls('fade-out-500');
+        });
       }
       me.getConCalendar().setHeaderDate(Calendar.selectedDate);
       me.getConMain().setMasked(true);
       //me.getConTimeline().addCls('fade-out-500');
-      var task = Ext.create('Ext.util.DelayedTask', function() {
-        me.getConTimeline().paintTimeline();
-        me.getConMain().setMasked(false);
-        //me.getConTimeline().removeCls('fade-out-500');
-      });
       task.delay(0);
     }
 });
@@ -63395,7 +63402,7 @@ Ext.define('ToDoAlpha.view.control.Event', {
     extend: 'Ext.Container',
     xtype: 'timelineevent',
     config: {
-  		cls: 'timeline-event timeline-event-remove',
+  		cls: 'timeline-event-remove',
   		listeners : {
               element : 'element',
               swipe : function(event, node, options, eOpts) {
@@ -63438,7 +63445,7 @@ Ext.define('ToDoAlpha.view.Timeline', {
     		type: 'hbox',
         	pack: 'end'
     	},
-    	//style: 'background-color: #A9F5BC;',
+    	//style: 'min-height: 200px',
         items: [
           // {
             // xtype: 'component',
@@ -63486,8 +63493,11 @@ Ext.define('ToDoAlpha.view.Timeline', {
     	this.callParent(arguments);
       Ext.namespace('Timeline');
       this.paintTimeline();
+      //this.paintCollapsedTimeline();
     },
     paintTimeline: function(){
+      Timeline.collapsed = false;var html = Timeline.collapsed ? 'EXPAND' : 'COLLAPSE';
+      Ext.getCmp('mTlCollapse').setHtml(html);
       this.child('#conTaskList').removeAll(true, true);
       this.child('#conMainLine').removeAll(true, true);
       this.child('#conTimeList').removeAll(true, true);
@@ -63504,6 +63514,11 @@ Ext.define('ToDoAlpha.view.Timeline', {
                         {filterFn: function(item) { return item.get('tasktime') >= date && Ext.Date.format(item.get('tasktime'), 'Y-m-d') == Ext.Date.format(date, 'Y-m-d');}}
                     ]);
       rStore.load(function(records, operation, success) {
+        // if(records.length > 0){
+          this.child('#conTaskList').setHtml('');
+        // }else{
+          // this.child('#conTaskList').setHtml('<span style="margin: 20px;line-height: 4em;opacity: 0.7;">Nothing todo this day...</span>');
+         // }
         //Paint list time
           //var currentDate = new Date();//Ext.Date.add(new Date(),Ext.Date.HOUR, -10);
           var currentHour = parseInt(Ext.Date.format(date, 'G')),
@@ -63538,6 +63553,7 @@ Ext.define('ToDoAlpha.view.Timeline', {
           }
           this.paintTimeSteps(mLeft, 0, true, currentHour);
           var calendarHeight = ((i - startH) * appConfig.defaultHourSpace) + mLeft;
+          calendarHeight = calendarHeight == 0 ? 200 : calendarHeight;
           this.setHeight(calendarHeight);
           
           //Paint list task
@@ -63577,11 +63593,13 @@ Ext.define('ToDoAlpha.view.Timeline', {
               prevContainer.setHtml(prevContainer.getHtml() + '<br/>' + records[i].get('title').trunc(30));
             }else{
               prevContainer = null;
-              this.child('#conTaskList').add(Ext.create('ToDoAlpha.view.control.Event',{
+              var event = Ext.create('ToDoAlpha.view.control.Event',{
                 id: 'event-container-' + h + '-' + m,
                 top: iTop,
                 html: records[i].get('title').trunc(30)
-              }));
+              });
+              event.addCls('timeline-event');
+              this.child('#conTaskList').add(event);
             }
           }
       }, this); 
@@ -63594,11 +63612,8 @@ Ext.define('ToDoAlpha.view.Timeline', {
   		for(var j = start; j <= hourSpace; j += stepSpace){
   			hHtml = ''; m = j/2;
   			if (m == 60) {hour ++; m = 0;}
-  			if(hour > 12){
-  				hHtml += hour - 12 + ':' + m + ' PM';
-  			}else{
-  				hHtml += hour + ':' + m + ' AM';
-  			}
+  			var h12 = AppHelper.getHour12(hour),
+        hHtml = h12.hour + ':' + m +  h12.ap;
   			this.child('#conMainLine').add(Ext.create('Ext.Component',
   			 { top: top + j, 
   			   id: 'minute-indicator-' + hour + '-' + m, 
@@ -63606,6 +63621,70 @@ Ext.define('ToDoAlpha.view.Timeline', {
   			   html: hHtml, 
   			   style: 'visibility: hidden; '}));
   		}
+    },
+    paintCollapsedTimeline: function(){
+      Timeline.collapsed = true;
+      var html = Timeline.collapsed ? 'EXPAND' : 'COLLAPSE';
+      Ext.getCmp('mTlCollapse').setHtml(html);
+      this.child('#conTaskList').removeAll(true, true);
+      this.child('#conMainLine').removeAll(true, true);
+      this.child('#conTimeList').removeAll(true, true);
+      this.child('#conTaskList').add(Ext.create('ToDoAlpha.view.control.AddOnTimeline'));
+      var me = this;
+      var date = Calendar.selectedDate ? Calendar.selectedDate : new Date();
+      
+      //Load tasks to today timeline
+      var rStore = Ext.getStore('Reminders');
+      rStore.clearFilter(false);
+      rStore.sort('tasktime', 'ASC');
+      rStore.filter([
+                        {property: 'isontimeline', value: true},
+                        {property: 'iscompleted', value: false},
+                        {filterFn: function(item) { return item.get('tasktime') >= date && Ext.Date.format(item.get('tasktime'), 'Y-m-d') == Ext.Date.format(date, 'Y-m-d');}}
+                    ]);
+      rStore.load(function(records, operation, success) {
+        if(records.length > 0){
+          this.child('#conTaskList').setHtml('');
+        }else{
+          this.child('#conTaskList').setHtml('<span style="margin: 20px;line-height: 4em;opacity: 0.7;">Nothing todo this day...</span>');
+          return;
+        }
+        //Paint list task
+        var taskContainerIds = [];
+        for(var i = 0; i < records.length; i ++){
+          var h = parseInt(Ext.Date.format(records[i].data.tasktime, 'G')),
+            m = parseInt(Ext.Date.format(records[i].data.tasktime, 'i'));
+            
+          var event = Ext.create('ToDoAlpha.view.control.Event',{
+            id: 'event-container-' + h + '-' + m,
+            html: records[i].get('title')});
+          event.addCls('timeline-event-collapsed');
+          this.child('#conTaskList').add(event);
+          }
+          setTimeout(function(){
+            for(var i = 0; i < records.length; i ++){
+              var h = parseInt(Ext.Date.format(records[i].data.tasktime, 'G')),
+                m = parseInt(Ext.Date.format(records[i].data.tasktime, 'i'));
+              
+              var top = Ext.get('event-container-' + h + '-' + m).dom.offsetTop + 2;
+              me.child('#conMainLine').add(Ext.create('Ext.Component',{top: top, cls: 'event-indicator'}));
+              
+              var h12 = AppHelper.getHour12(h),
+              html = h12.hour + ':' + AppHelper.addFirstZero(m) + '<span style="font-size:0.7em; line-height: 1px"><br/>' + h12.ap+ '<span>';
+              var hourButton = Ext.create('Ext.Button',{
+                text: html,
+                top: top,
+                ui: 'plain',
+                pressedCls: '',
+                cls: 'hour-white'});
+              me.child('#conTimeList').add(hourButton);
+              var lastItem = Ext.get('event-container-' + h + '-' + m).dom,
+                height = lastItem.offsetTop + lastItem.offsetHeight;
+              height = height < 200 ? 200 : height;
+              me.setHeight(height);
+            }
+          },100);
+      }, this); 
     }
 });
 
@@ -63701,7 +63780,14 @@ Ext.define('ToDoAlpha.view.Calendar', {
 		        },
 		        {
 		        	xtype : 'component',
-		        	id: 'headerTime'
+		        	id: 'headerTime',
+		        	listeners: {
+		        	  element: 'element',
+		        	  tap: function(){
+		        	    Calendar.container.getScrollable().getScroller().scrollTo(0,0, true);
+		        	    Ext.getCmp('listTodo').getScrollable().getScroller().scrollTo(0,0, true);
+		        	  }
+		        	}
 		        },
             {
               xtype: 'daypicker'
@@ -63731,7 +63817,10 @@ Ext.define('ToDoAlpha.view.Calendar', {
       scroll: this.onScrollChange,
       scope: this
     });
-    
+    scroller.getContainer().onBefore({
+        dragend: function(){Calendar.container.onScrollDragend(scroller)},
+        scope: this
+    });
 		var date = new Date();
 		//var todayHtml = '<div class="day-header">TODAY</div><div class="day-header-details" style="margin-top:13px">'+ 
 			//Ext.Date.format(date, 'M') + '<br/>' + Ext.Date.format(date, 'j') +'</div>';
@@ -63764,23 +63853,39 @@ Ext.define('ToDoAlpha.view.Calendar', {
     	}
     	var timeHtml = '<div style="padding: 13px 13px 0px 0px; font-size: 1.1em; line-height: 18px">'+h+':'+m+'<div class="time-header-details">'+s+ ' ' + ap + '</div><div>';
     	this.down('#headerTime').setHtml(timeHtml);
-    	t=setTimeout(function(){me.setCurrentTime()},500);
+    	t=setTimeout(function(){me.setCurrentTime()},1000);
     }, 
     onScrollChange: function(scroller, x, y){
       if (y < 0 && scroller.isTouching) {
-        var conTimline = this.child('#conTimeline'); 
+        var conTimline = this.child('#conTimeline');
+        this.slectedMenu = -1;
         //conTimline.child('#mTlAdd').removeCls('menu-top-item-tl-selected');
         conTimline.child('#mTlHistory').removeCls('menu-top-item-tl-selected');
-        conTimline.child('#mTlCollapse').removeCls('menu-top-item-tl-selected');
-        if(-y >= 120){
+        conTimline.child('#mTlCollapse').removeCls('menu-top-item-tl-selected'); 
+        //if(-y >= 120){
           //conTimline.child('#mTlAdd').addCls('menu-top-item-tl-selected');
           //this.slectedMenu = 0;
-        }else if(-y >= 85){
+        //}else 
+        if(-y >= 85){
           conTimline.child('#mTlHistory').addCls('menu-top-item-tl-selected');
           this.slectedMenu = 1;
         }else if (-y >= 50 && -y < 85){
             conTimline.child('#mTlCollapse').addCls('menu-top-item-tl-selected');
             this.slectedMenu = 2;
+        }
+      }
+    },
+    onScrollDragend: function(scroller){
+      if(this.slectedMenu == 1){
+        AppHelper.showToast(Todo.List, "History feature is comming soon...");
+        this.slectedMenu = - 1;
+      }else if(this.slectedMenu == 2){
+        this.slectedMenu = - 1;
+        var html;
+        if(Timeline.collapsed){
+          Ext.getCmp('conTimeline').paintTimeline();
+        }else{
+          Ext.getCmp('conTimeline').paintCollapsedTimeline();
         }
       }
     }
@@ -64335,7 +64440,7 @@ Ext.define('ToDoAlpha.view.todo.List', {
           	if(Todo.List.slectedMenu == 0){
           	  Todo.List.isAdding = false;
           		//Ext.Msg.alert('Thank you', 'This feature is comming soon...', Ext.emptyFn);
-          		AppHelper.showToast(Todo.List, "This feature is comming soon...");
+          		AppHelper.showToast(Todo.List, "Google sync feature is comming soon...");
           	}else if(Todo.List.slectedMenu == 1){
           		var last = store.last(),
       				order = last ? last.get('taskorder') + 1 : 0;
@@ -64418,24 +64523,8 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
     	layout: 'hbox',
     	id: 'conDraggable',
     	width: '80%',
-        //left: '-270px',
         height: '100%',
-//        cls: 'bg-color',
         style: 'opacity: 1;',//disable drag effect of x-dragging
-//        draggable: {
-//            direction: 'horizontal',
-//            constraint: {
-//                min: { x: -270, y: 0 },
-//                max: { x: 0, y: 0 }
-//            },
-//            listeners: {
-//                dragstart: {
-//                    fn:    function(draggable, e, offset, eOpts){return DraggableContainer.onContainerDragstart(draggable, e, offset, eOpts);},
-//                    order: 'before'
-//                },
-//                dragend: function(draggable, e, eOpts){return DraggableContainer.onContainerDragend(draggable, e, eOpts);}
-//            },
-//		},
     	items:[{
             xtype: 'calendar',
             id: 'conCalendar',
@@ -64453,12 +64542,7 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
                 //Hide month & day picker
                 var xTreeHold = AppHelper.isPhone() ? 70 : 175;
                 if(e.pageX > xTreeHold && e.pageY > 55){
-                  Ext.getCmp('conDayPicker').addCls('fade-out-500');
-                  Ext.getCmp('conMonthPicker').addCls('fade-out-500');
-                  setTimeout(function(){
-                    Ext.getCmp('conDayPicker').hide();
-                    Ext.getCmp('conMonthPicker').hide();
-                  },500);
+                  DraggableContainer.hideDayPicker();
                 }
               }
         }
@@ -64509,6 +64593,7 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
         node = e.target;
         while (node = node.parentNode) {
             if (node.className && node.className.indexOf('draggable-line') > -1) {
+                DraggableContainer.hideDayPicker();
                 return true;
             }
         }
@@ -64550,6 +64635,15 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
         draggable.setOffset(offsetX, 0, {
             duration: duration
         });
+    },
+    hideDayPicker: function(){
+      //Hide month & day picker
+      Ext.getCmp('conDayPicker').addCls('fade-out-500');
+        Ext.getCmp('conMonthPicker').addCls('fade-out-500');
+        setTimeout(function(){
+          Ext.getCmp('conDayPicker').hide();
+          Ext.getCmp('conMonthPicker').hide();
+        },500);
     }
 });
 
