@@ -62989,7 +62989,7 @@ Ext.define('ToDoAlpha.controller.Timeline', {
           top: top,
           html: title.trunc(30)
         });
-        event.addCls('timeline-event')
+        event.addCls('timeline-event');
     		Timeline.Controler.getConTaskList().add(event);
     	}else{
     		Timeline.Controler.getConAddTimeline().hide();
@@ -63320,7 +63320,7 @@ Ext.define('ToDoAlpha.controller.Calendar', {
       me.getConCalendar().setHeaderDate(Calendar.selectedDate);
       me.getConMain().setMasked(true);
       //me.getConTimeline().addCls('fade-out-500');
-      task.delay(3000);
+      task.delay(0);
     }
 });
 
@@ -63492,6 +63492,86 @@ Ext.define('ToDoAlpha.view.Timeline', {
     initialize: function() {
     	this.callParent(arguments);
       Ext.namespace('Timeline');
+      var store = Ext.getStore('Reminders');
+      store.load(function(records, operation, success){
+        if(records.length == 0){
+          var time = new Date();
+          time = new Date(2013, time.getMonth(), time.getDate(), time.getHours() + 1);
+          if(time.getHours() < 8){ time = new Date(2013, time.getMonth(), time.getDate(), 8)}
+          store.add([
+            {
+              title: 'User cannot delete this reminder at this time',
+              tasktime: new Date(2010, 1,1),
+              isontimeline: true
+            },
+            {
+              title: 'Pull down to see options',
+              tasktime: time,
+              isontimeline: true
+            },
+            {
+              title: 'Release while item is highlighted to SELECT',
+              tasktime: Ext.Date.add(time, Ext.Date.MINUTE, 20),
+              isontimeline: true
+            },
+            {
+              title: 'Tap the cyan "hours" on time line to add reminder (while in EXPAND mode)',
+              tasktime: Ext.Date.add(time, Ext.Date.MINUTE, 60),
+              isontimeline: true
+            },
+            {
+              title: 'Tap & hold "hours" (1 sec) on time then drag up/down to add Reminder (while in EXPAND mode)',
+              tasktime: Ext.Date.add(time, Ext.Date.MINUTE, 120),
+              isontimeline: true
+            },
+            {
+              title: 'Tap top left header to select date',
+              tasktime: Ext.Date.add(time, Ext.Date.MINUTE, 180),
+              isontimeline: true
+            },
+            {
+              title: 'Drag the "timeline" to left to see the todo list (if you are using phone)',
+              tasktime: Ext.Date.add(time, Ext.Date.MINUTE, 210),
+              isontimeline: true
+            },
+            {
+              title: 'Swipe left/right on the reminder to complete it',
+              tasktime: Ext.Date.add(time, Ext.Date.MINUTE, 330),
+              isontimeline: true
+            }
+           ]);
+            var tStore = Ext.getStore('Tasks');
+            var time = new Date();
+            tStore.add([
+              {
+                title: 'Pull down to see options and release while item is highlighted to SELECT',
+                tasktime: time,
+                isontimeline: false,
+                taskorder: 1
+              },
+              {
+                title: 'Swipe the task to RIGHT to complete it',
+                tasktime: time,
+                isontimeline: false,
+                taskorder: 2
+              },
+              {
+                title: 'Swipe the task to LEFT for more options: delete it or assign it to a specific time by TAP & HOLD the clock icon then drag it to the "timeline" (white in EXPAND mode)',
+                tasktime: time,
+                isontimeline: false,
+                taskorder: 3
+              },
+              {
+                title: 'Drag the "timline" to right to see reminder list',
+                tasktime: time,
+                isontimeline: false,
+                taskorder: 4
+              }
+             ]);
+            tStore.sync();
+        }
+      }, this);
+      store.sync();
       this.paintTimeline();
       //this.paintCollapsedTimeline();
     },
@@ -63614,7 +63694,7 @@ Ext.define('ToDoAlpha.view.Timeline', {
   			hHtml = ''; m = j/2;
   			if (m == 60) {hour ++; m = 0;}
   			var h12 = AppHelper.getHour12(hour),
-        hHtml = h12.hour + ':' + m +  h12.ap;
+        hHtml = h12.hour + ':' + m + ' ' +  h12.ap;
   			this.child('#conMainLine').add(Ext.create('Ext.Component',
   			 { top: top + j, 
   			   id: 'minute-indicator-' + hour + '-' + m, 
@@ -64010,6 +64090,7 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
         // buttonClock.hide();
         // buttonDelete.hide();
     	  item.getAt(3).setHtml('');
+        item.removeCls('removing-task');
     		item.addCls('adding-task');
     		var txt = Ext.create('ToDoAlpha.view.control.AddOnTodo');
       	txt.child('#txtAddTodo').on('blur', this.onTaskAddBlur);
@@ -64064,7 +64145,6 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
     	Ext.getCmp('conDraggable').add(Todo.listItem.draggedClock);
     },
     onClockDragstart: function(draggable, e, offset, eOpts) {
-    	//console.log(draggable, e);
     	Ext.getCmp('listTodo').setScrollable(false);
     	//Todo.listItem.container.calculateTimeBoxes(draggable.getElement());
     },
@@ -64142,13 +64222,21 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
                 }
           }
           Timeline.Controler.getConMainLine().add(Ext.create('Ext.Component',{ top: top, cls: 'event-indicator'}));
-  				Ext.getCmp('conTaskList').add(Ext.create('Ext.Container',{
+          var eventAdd = Ext.create('ToDoAlpha.view.control.Event',{
+            id: 'event-container-' + h + '-' + m,
             top: top,
-            html: task.get('title').trunc(60),
-            cls: 'timeline-event'
-          }));
-          Ext.getCmp('minute-indicator-' + h + '-'+ m).hide();
-
+            html: task.get('title').trunc(30)
+          });
+          eventAdd.addCls('timeline-event'); 
+  				Ext.getCmp('conTaskList').add(eventAdd);
+          //set Vidible if want to add multi event on an indicator/ hide to disable add
+          //var mIndicator = Ext.getCmp('minute-indicator-' + Ext.Date.format(time, 'G') + '-'+ parseInt(Ext.Date.format(time, 'i')));
+          var mIndicator = document.getElementById('minute-indicator-' + h + '-'+ m);
+          if(mIndicator){
+           mIndicator.style.visibility ='hidden';
+           Ext.getCmp('minute-indicator-' + h + '-'+ m).removeCls('event-indicator-selected');
+           //mIndicator.config.style =('visibility: hidden;');
+          }
           if(Ext.getCmp('conDraggable').draggableBehavior.draggable != undefined){
             Ext.getCmp('conDraggable').draggableBehavior.draggable.setOffset(0, 0, {
                 duration: 250
@@ -64293,7 +64381,7 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
          buttonDelete = listItem.getAt(2);
       buttonClock.hide();
       buttonDelete.hide();
-      Ext.Anim.run(this, 'fade', {
+      Ext.Anim.run(listItem, 'fade', {
           after: function(){
             tStore.remove(listItem.getRecord());
             tStore.sync();
