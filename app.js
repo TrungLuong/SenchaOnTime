@@ -63475,14 +63475,12 @@ Ext.define('ToDoAlpha.view.Timeline', {
           },
  	        {
  	            xtype: 'container',
- 	            cls: 'draggable-line',
  	            width: AppConfig.timelineWidth,
  	            cls: 'line-gb-color',
  	            id: 'conMainLine'
  	        },
  	        {
  	        	xtype: 'container',
-            cls: 'draggable-line',
  	        	id: 'conTimeList',
  	        	layout: 'vbox',
  	        	width: AppConfig.timelistWidth - AppConfig.timelineWidth
@@ -63762,7 +63760,7 @@ Ext.define('ToDoAlpha.view.Timeline', {
               me.child('#conTimeList').add(hourButton);
               var lastItem = Ext.get('event-container-' + h + '-' + m).dom,
                 height = lastItem.offsetTop + lastItem.offsetHeight;
-              height = height < 200 ? 200 : height;
+              //height = height < 200 ? 200 : height;
               me.setHeight(height);
             }
           },100);
@@ -63948,7 +63946,7 @@ Ext.define('ToDoAlpha.view.Calendar', {
           //conTimline.child('#mTlAdd').addCls('menu-top-item-tl-selected');
           //this.slectedMenu = 0;
         //}else 
-        if(-y >= 85){
+        if(-y >= 85 && -y < 130){
           conTimline.child('#mTlHistory').addCls('menu-top-item-tl-selected');
           this.slectedMenu = 1;
         }else if (-y >= 50 && -y < 85){
@@ -63958,6 +63956,9 @@ Ext.define('ToDoAlpha.view.Calendar', {
       }
     },
     onScrollDragend: function(scroller){
+      if(Ext.getCmp('conDraggable').draggableBehavior.draggable.offset.x < -50){
+        return;
+      }
       if(this.slectedMenu == 1){
         AppHelper.showToast(Todo.List, "History feature is comming soon...");
         this.slectedMenu = - 1;
@@ -64498,10 +64499,11 @@ Ext.define('ToDoAlpha.view.todo.List', {
 		this.child('#mAdd').removeCls('menu-top-item-selected');
 		this.child('#mAddEnd').removeCls('menu-top-item-selected');
 		this.child('#mSync').removeCls('menu-top-item-selected');
-    	if(-y >= 120){
+		Todo.List.slectedMenu = -1;
+    	if(-y >= 120 && -y < 160){
     		this.child('#mSync').addCls('menu-top-item-selected');
     		Todo.List.slectedMenu = 0;
-    	}else if(-y >= 85){
+    	}else if(-y >= 85 && -y < 120){
     		this.child('#mAddEnd').addCls('menu-top-item-selected');
     		Todo.List.slectedMenu = 1;
     	}else if (-y >= Todo.List.pullHeight && -y < 85){
@@ -64684,14 +64686,13 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
     onContainerDragstart: function(draggable, e, offset, eOpts) {
     	//return if hour is dragging
     	if(Timeline.isHourDragging){return false;}
-        node = e.target;
-        while (node = node.parentNode) {
-            if (node.className && node.className.indexOf('draggable-line') > -1) {
-                DraggableContainer.hideDayPicker();
-                return true;
-            }
-        }
-        return false;
+      var x = e.pageX,
+        width = Ext.getBody().getSize().width;
+      if((draggable.offset.x == 0 && width - x <= 60) || (draggable.offset.x != 0 && x <= 60 + 5)){
+        DraggableContainer.hideDayPicker();
+        return true;
+      }
+      return false;
     },
 	/**
     *  @private
@@ -64703,13 +64704,13 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
         var velocity  = Math.abs(e.deltaX / e.deltaTime),
             direction = (e.deltaX > 0) ? "right" : "left",
             offset    = Ext.clone(draggable.offset),
-            threshold = parseInt(100 - DraggableContainer.todoWidth);
+            threshold = DraggableContainer.todoWidth/5;
         switch (direction) {
             case "right":
-                offset.x = (velocity > 0.6 || offset.x > threshold) ? 0 : -DraggableContainer.todoWidth;
+                offset.x = (velocity > 0.6 || offset.x + (Ext.getBody().getSize().width - AppConfig.timelistWidth - 5)> threshold) ? 0 : -DraggableContainer.todoWidth;
                 break;
             case "left":
-                offset.x = (velocity > 0.6 || offset.x < threshold) ? -DraggableContainer.todoWidth : 0;
+                offset.x = (velocity > 0.6 || offset.x < -threshold) ? -DraggableContainer.todoWidth : 0;
                 break;
         }
 
