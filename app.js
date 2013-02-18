@@ -62942,7 +62942,7 @@ Ext.define('ToDoAlpha.controller.Timeline', {
       	if(/(Android)/.test(navigator.userAgent)){
       		setTimeout(function(){Ext.getCmp('txtAddTimeline').focus(true,10);},500);
       	}else{
-          	Ext.getCmp('txtAddTimeline').focus(true,10);
+          	Ext.getCmp('txtAddTimeline').focus();
       	}
     },
     onAddTimelineEnter: function(textField){
@@ -62987,7 +62987,7 @@ Ext.define('ToDoAlpha.controller.Timeline', {
 	    	var event= Ext.create('ToDoAlpha.view.control.Event',{
           id: 'event-container-' + h + '-' + m,
           top: top,
-          html: title.trunc(30)
+          html: title.trunc(AppConfig.textTrunc)
         });
         event.addCls('timeline-event');
     		Timeline.Controler.getConTaskList().add(event);
@@ -63669,13 +63669,13 @@ Ext.define('ToDoAlpha.view.Timeline', {
               if(prevContainer == null){
                 prevContainer = Ext.getCmp('event-container-' + prevH + '-' + prevM);
               }
-              prevContainer.setHtml(prevContainer.getHtml() + '<br/>' + records[i].get('title').trunc(30));
+              prevContainer.setHtml(prevContainer.getHtml() + '<br/>' + records[i].get('title').trunc(AppConfig.textTrunc));
             }else{
               prevContainer = null;
               var event = Ext.create('ToDoAlpha.view.control.Event',{
                 id: 'event-container-' + h + '-' + m,
                 top: iTop,
-                html: records[i].get('title').trunc(30)
+                html: records[i].get('title').trunc(AppConfig.textTrunc)
               });
               event.addCls('timeline-event');
               this.child('#conTaskList').add(event);
@@ -63956,8 +63956,11 @@ Ext.define('ToDoAlpha.view.Calendar', {
       }
     },
     onScrollDragend: function(scroller){
-      if(Ext.getCmp('conDraggable').draggableBehavior.draggable.offset.x < -50){
-        return;
+      var draggable = Ext.getCmp('conDraggable').draggableBehavior.draggable;
+      if(draggable){
+        if(draggable.offset.x < -50){
+          return;
+        }
       }
       if(this.slectedMenu == 1){
         AppHelper.showToast(Todo.List, "History feature is comming soon...");
@@ -64226,7 +64229,7 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
           var eventAdd = Ext.create('ToDoAlpha.view.control.Event',{
             id: 'event-container-' + h + '-' + m,
             top: top,
-            html: task.get('title').trunc(30)
+            html: task.get('title').trunc(AppConfig.textTrunc)
           });
           eventAdd.addCls('timeline-event'); 
   				Ext.getCmp('conTaskList').add(eventAdd);
@@ -64569,7 +64572,7 @@ Ext.define('ToDoAlpha.view.todo.List', {
     },
     onItemSwipe: function(list, target, idx, event){
       if(Todo.List.isAdding){
-        return
+        return;
       }
     	var tStore = Ext.getStore('Tasks'),
     	   listItem = list.getAt(idx),
@@ -64618,7 +64621,7 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
 	config:{
     	layout: 'hbox',
     	id: 'conDraggable',
-    	width: '80%',
+    	width: '95%',
         height: '100%',
         style: 'opacity: 1;',//disable drag effect of x-dragging
     	items:[{
