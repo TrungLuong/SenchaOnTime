@@ -1,1 +1,1 @@
-{"id":"a8f6973c-d53f-4bfb-9ce7-9f33400ecda3","js":[{"type":"js","path":"touch/sencha-touch.js"},{"type":"js","path":"lib/config.js"},{"type":"js","path":"lib/helper.js"},{"update":"delta","path":"app.js","type":"js","bundle":true}],"css":[{"update":"delta","type":"css","path":"resources/css/app.css"}]}
+{"id":"a8f6973c-d53f-4bfb-9ce7-9f33400ecda3","js":[{"type":"js","path":"lib/config.js"},{"type":"js","path":"lib/helper.js"},{"update":"delta","path":"app.js","type":"js","bundle":true}],"css":[{"update":"delta","type":"css","path":"resources/css/app.css"}]}
