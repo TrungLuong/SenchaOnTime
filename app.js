@@ -1,10 +1,6 @@
 //@tag foundation,core
 //@define Ext
 
-/**
- * @class Ext
- * @singleton
- */
 (function() {
     var global = this,
         objectPrototype = Object.prototype,
@@ -29,10 +25,6 @@
                        'toLocaleString', 'toString', 'constructor'];
     }
 
-    /**
-     * An array containing extra enumerables for old browsers.
-     * @property {String[]}
-     */
     Ext.enumerables = enumerables;
 
     Ext.apply = function(object, config, defaults) {
@@ -66,20 +58,10 @@
     }, Ext.buildSettings || {});
 
     Ext.apply(Ext, {
-        /**
-         * @property {Function}
-         * A reusable empty function
-         */
         emptyFn: emptyFn,
 
         baseCSSPrefix: Ext.buildSettings.baseCSSPrefix,
 
-        /**
-         * Copies all the properties of config to object if they don't already exist.
-         * @param {Object} object The receiver of the properties.
-         * @param {Object} config The source of the properties.
-         * @return {Object} returns obj
-         */
         applyIf: function(object, config) {
             var property;
 
@@ -235,32 +217,14 @@
             return (value === null) || (value === undefined) || (!allowEmptyString ? value === '' : false) || (Ext.isArray(value) && value.length === 0);
         },
 
-        /**
-         * Returns `true` if the passed value is a JavaScript Array, `false` otherwise.
-         *
-         * @param {Object} target The target to test.
-         * @return {Boolean}
-         * @method
-         */
         isArray: ('isArray' in Array) ? Array.isArray : function(value) {
             return toString.call(value) === '[object Array]';
         },
 
-        /**
-         * Returns `true` if the passed value is a JavaScript Date object, `false` otherwise.
-         * @param {Object} object The object to test.
-         * @return {Boolean}
-         */
         isDate: function(value) {
             return toString.call(value) === '[object Date]';
         },
 
-        /**
-         * Returns `true` if the passed value is a JavaScript Object, `false` otherwise.
-         * @param {Object} value The value to test.
-         * @return {Boolean}
-         * @method
-         */
         isObject: (toString.call(null) === '[object Object]') ?
         function(value) {
             // check ownerDocument here as well to exclude DOM nodes
@@ -270,29 +234,15 @@
             return toString.call(value) === '[object Object]';
         },
 
-        /**
-         * @private
-         */
         isSimpleObject: function(value) {
             return value instanceof Object && value.constructor === Object;
         },
-        /**
-         * Returns `true` if the passed value is a JavaScript 'primitive', a string, number or Boolean.
-         * @param {Object} value The value to test.
-         * @return {Boolean}
-         */
         isPrimitive: function(value) {
             var type = typeof value;
 
             return type === 'string' || type === 'number' || type === 'boolean';
         },
 
-        /**
-         * Returns `true` if the passed value is a JavaScript Function, `false` otherwise.
-         * @param {Object} value The value to test.
-         * @return {Boolean}
-         * @method
-         */
         isFunction:
         // Safari 3.x and 4.x returns 'function' for typeof <NodeList>, hence we need to fall back to using
         // Object.prorotype.toString (slower)
@@ -302,39 +252,16 @@
             return typeof value === 'function';
         },
 
-        /**
-         * Returns `true` if the passed value is a number. Returns `false` for non-finite numbers.
-         * @param {Object} value The value to test.
-         * @return {Boolean}
-         */
         isNumber: function(value) {
             return typeof value === 'number' && isFinite(value);
         },
-
-        /**
-         * Validates that a value is numeric.
-         * @param {Object} value Examples: 1, '1', '2.34'
-         * @return {Boolean} `true` if numeric, `false` otherwise.
-         */
         isNumeric: function(value) {
             return !isNaN(parseFloat(value)) && isFinite(value);
         },
 
-        /**
-         * Returns `true` if the passed value is a string.
-         * @param {Object} value The value to test.
-         * @return {Boolean}
-         */
         isString: function(value) {
             return typeof value === 'string';
         },
-
-        /**
-         * Returns `true` if the passed value is a Boolean.
-         *
-         * @param {Object} value The value to test.
-         * @return {Boolean}
-         */
         isBoolean: function(value) {
             return typeof value === 'boolean';
         },
@@ -494,32 +421,6 @@
 //@define Ext.Version
 //@require Ext
 
-/**
- * @author Jacky Nguyen <jacky@sencha.com>
- * @docauthor Jacky Nguyen <jacky@sencha.com>
- * @class Ext.Version
- *
- * A utility class that wrap around a string version number and provide convenient
- * method to perform comparison. See also: {@link Ext.Version#compare compare}. Example:
- *
- *     var version = new Ext.Version('1.0.2beta');
- *     console.log("Version is " + version); // Version is 1.0.2beta
- *
- *     console.log(version.getMajor()); // 1
- *     console.log(version.getMinor()); // 0
- *     console.log(version.getPatch()); // 2
- *     console.log(version.getBuild()); // 0
- *     console.log(version.getRelease()); // beta
- *
- *     console.log(version.isGreaterThan('1.0.1')); // true
- *     console.log(version.isGreaterThan('1.0.2alpha')); // true
- *     console.log(version.isGreaterThan('1.0.2RC')); // false
- *     console.log(version.isGreaterThan('1.0.2')); // false
- *     console.log(version.isLessThan('1.0.2')); // true
- *
- *     console.log(version.match(1.0)); // true
- *     console.log(version.match('1.0.2')); // true
- */
 (function() {
 
 // Current core version
@@ -678,18 +579,6 @@ var version = '4.1.0', Version;
             return Version.compare(this.version, target) === 0;
         },
 
-        /**
-         * Returns whether this version matches the supplied argument. Example:
-         * 
-         *     var version = new Ext.Version('1.0.2beta');
-         *     console.log(version.match(1)); // true
-         *     console.log(version.match(1.0)); // true
-         *     console.log(version.match('1.0.2')); // true
-         *     console.log(version.match('1.0.2RC')); // false
-         * 
-         * @param {String/Number} target The version to compare with.
-         * @return {Boolean} `true` if this version matches the target, `false` otherwise.
-         */
         match: function(target) {
             target = String(target);
             return this.version.substr(0, target.length) === target;
@@ -1024,39 +913,12 @@ Ext.String = {
         return string.replace(Ext.String.escapeRe, "\\$1");
     },
 
-    /**
-     * Utility function that allows you to easily switch a string between two alternating values.  The passed value
-     * is compared to the current string, and if they are equal, the other value that was passed in is returned.  If
-     * they are already different, the first value passed in is returned.  Note that this method returns the new value
-     * but does not change the current string.
-     *
-     *     // alternate sort directions
-     *     sort = Ext.String.toggle(sort, 'ASC', 'DESC');
-     *
-     *     // instead of conditional logic:
-     *     sort = (sort == 'ASC' ? 'DESC' : 'ASC');
-     *
-     * @param {String} string The current string.
-     * @param {String} value The value to compare to the current string.
-     * @param {String} other The new value to use if the string already equals the first value passed in.
-     * @return {String} The new value.
-     */
+
     toggle: function(string, value, other) {
         return string === value ? other : value;
     },
 
-    /**
-     * Pads the left side of a string with a specified character.  This is especially useful
-     * for normalizing number and date strings.  Example usage:
-     *
-     *     var s = Ext.String.leftPad('123', 5, '0');
-     *     alert(s); // '00123'
-     *
-     * @param {String} string The original string.
-     * @param {Number} size The total length of the output string.
-     * @param {String} [character= ] (optional) The character with which to pad the original string (defaults to empty string " ").
-     * @return {String} The padded string.
-     */
+
     leftPad: function(string, size, character) {
         var result = String(string);
         character = character || " ";
@@ -1066,20 +928,7 @@ Ext.String = {
         return result;
     },
 
-    /**
-     * Allows you to define a tokenized string and pass an arbitrary number of arguments to replace the tokens.  Each
-     * token must be unique, and must increment in the format {0}, {1}, etc.  Example usage:
-     *
-     *     var cls = 'my-class',
-     *         text = 'Some text';
-     *     var s = Ext.String.format('<div class="{0}">{1}</div>', cls, text);
-     *     alert(s); // '<div class="my-class">Some text</div>'
-     *
-     * @param {String} string The tokenized string to be formatted.
-     * @param {String} value1 The value to replace token {0}.
-     * @param {String} value2 Etc...
-     * @return {String} The formatted string.
-     */
+
     format: function(format) {
         var args = Ext.Array.toArray(arguments, 1);
         return format.replace(Ext.String.formatRe, function(m, i) {
@@ -1087,17 +936,7 @@ Ext.String = {
         });
     },
 
-    /**
-     * Returns a string with a specified number of repetitions a given string pattern.
-     * The pattern be separated by a different string.
-     *
-     *     var s = Ext.String.repeat('---', 4); // '------------'
-     *     var t = Ext.String.repeat('--', 3, '/'); // '--/--/--'
-     *
-     * @param {String} pattern The pattern to repeat.
-     * @param {Number} count The number of times to repeat the pattern (may be 0).
-     * @param {String} sep An option string to separate each pattern.
-     */
+
     repeat: function(pattern, count, sep) {
         for (var buf = [], i = count; i--; ) {
             buf.push(pattern);
@@ -1205,36 +1044,7 @@ Ext.urlAppend = Ext.String.urlAppend;
                            : Math.min(array.length, index);
     }
 
-    /*
-    Does the same work as splice, but with a slightly more convenient signature. The splice
-    method has bugs in IE8, so this is the implementation we use on that platform.
 
-    The rippling of items in the array can be tricky. Consider two use cases:
-
-                  index=2
-                  removeCount=2
-                 /=====\
-        +---+---+---+---+---+---+---+---+
-        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
-        +---+---+---+---+---+---+---+---+
-                         /  \/  \/  \/  \
-                        /   /\  /\  /\   \
-                       /   /  \/  \/  \   +--------------------------+
-                      /   /   /\  /\   +--------------------------+   \
-                     /   /   /  \/  +--------------------------+   \   \
-                    /   /   /   /+--------------------------+   \   \   \
-                   /   /   /   /                             \   \   \   \
-                  v   v   v   v                               v   v   v   v
-        +---+---+---+---+---+---+       +---+---+---+---+---+---+---+---+---+
-        | 0 | 1 | 4 | 5 | 6 | 7 |       | 0 | 1 | a | b | c | 4 | 5 | 6 | 7 |
-        +---+---+---+---+---+---+       +---+---+---+---+---+---+---+---+---+
-        A                               B        \=========/
-                                                 insert=[a,b,c]
-
-    In case A, it is obvious that copying of [4,5,6,7] must be left-to-right so
-    that we don't end up with [0,1,6,7,6,7]. In case B, we have the opposite; we
-    must go right-to-left or else we would end up with [0,1,a,b,c,4,4,4,4].
-    */
     function replaceSim (array, index, removeCount, insert) {
         var add = insert ? insert.length : 0,
             length = array.length,
@@ -1322,49 +1132,7 @@ Ext.urlAppend = Ext.String.urlAppend;
 
     // NOTE: from here on, use erase, replace or splice (not native methods)...
     ExtArray = Ext.Array = {
-        /**
-         * Iterates an array or an iterable value and invoke the given callback function for each item.
-         *
-         *     var countries = ['Vietnam', 'Singapore', 'United States', 'Russia'];
-         *
-         *     Ext.Array.each(countries, function(name, index, countriesItSelf) {
-         *         console.log(name);
-         *     });
-         *
-         *     var sum = function() {
-         *         var sum = 0;
-         *
-         *         Ext.Array.each(arguments, function(value) {
-         *             sum += value;
-         *         });
-         *
-         *         return sum;
-         *     };
-         *
-         *     sum(1, 2, 3); // returns 6
-         *
-         * The iteration can be stopped by returning false in the function callback.
-         *
-         *     Ext.Array.each(countries, function(name, index, countriesItSelf) {
-         *         if (name === 'Singapore') {
-         *             return false; // break here
-         *         }
-         *     });
-         *
-         * {@link Ext#each Ext.each} is alias for {@link Ext.Array#each Ext.Array.each}
-         *
-         * @param {Array/NodeList/Object} iterable The value to be iterated. If this
-         * argument is not iterable, the callback function is called once.
-         * @param {Function} fn The callback function. If it returns `false`, the iteration stops and this method returns
-         * the current `index`.
-         * @param {Object} fn.item The item at the current `index` in the passed `array`
-         * @param {Number} fn.index The current `index` within the `array`
-         * @param {Array} fn.allItems The `array` itself which was passed as the first argument
-         * @param {Boolean} fn.return Return false to stop iteration.
-         * @param {Object} scope (Optional) The scope (`this` reference) in which the specified function is executed.
-         * @param {Boolean} [reverse=false] (Optional) Reverse the iteration order (loop from the end to the beginning).
-         * @return {Boolean} See description for the `fn` parameter.
-         */
+       
         each: function(array, fn, scope, reverse) {
             array = ExtArray.from(array);
 
@@ -1389,19 +1157,6 @@ Ext.urlAppend = Ext.String.urlAppend;
             return true;
         },
 
-        /**
-         * Iterates an array and invoke the given callback function for each item. Note that this will simply
-         * delegate to the native `Array.prototype.forEach` method if supported. It doesn't support stopping the
-         * iteration by returning `false` in the callback function like {@link Ext.Array#each}. However, performance
-         * could be much better in modern browsers comparing with {@link Ext.Array#each}
-         *
-         * @param {Array} array The array to iterate.
-         * @param {Function} fn The callback function.
-         * @param {Object} fn.item The item at the current `index` in the passed `array`.
-         * @param {Number} fn.index The current `index` within the `array`.
-         * @param {Array}  fn.allItems The `array` itself which was passed as the first argument.
-         * @param {Object} scope (Optional) The execution scope (`this`) in which the specified function is executed.
-         */
         forEach: supportsForEach ? function(array, fn, scope) {
                 return array.forEach(fn, scope);
         } : function(array, fn, scope) {
@@ -1457,31 +1212,7 @@ Ext.urlAppend = Ext.String.urlAppend;
             return false;
         },
 
-        /**
-         * Converts any iterable (numeric indices and a length property) into a true array.
-         *
-         *     function test() {
-         *         var args = Ext.Array.toArray(arguments),
-         *             fromSecondToLastArgs = Ext.Array.toArray(arguments, 1);
-         *
-         *         alert(args.join(' '));
-         *         alert(fromSecondToLastArgs.join(' '));
-         *     }
-         *
-         *     test('just', 'testing', 'here'); // alerts 'just testing here';
-         *                                      // alerts 'testing here';
-         *
-         *     Ext.Array.toArray(document.getElementsByTagName('div')); // will convert the NodeList into an array
-         *     Ext.Array.toArray('splitted'); // returns ['s', 'p', 'l', 'i', 't', 't', 'e', 'd']
-         *     Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
-         *
-         * {@link Ext#toArray Ext.toArray} is alias for {@link Ext.Array#toArray Ext.Array.toArray}
-         *
-         * @param {Object} iterable the iterable object to be turned into a true Array.
-         * @param {Number} [start=0] (Optional) a zero-based index that specifies the start of extraction.
-         * @param {Number} [end=-1] (Optional) a zero-based index that specifies the end of extraction.
-         * @return {Array}
-         */
+
         toArray: function(iterable, start, end){
             if (!iterable || !iterable.length) {
                 return [];
@@ -1847,20 +1578,6 @@ Ext.urlAppend = Ext.String.urlAppend;
             return clone;
         },
 
-        /**
-         * Returns a shallow copy of a part of an array. This is equivalent to the native
-         * call `Array.prototype.slice.call(array, begin, end)`. This is often used when "array"
-         * is "arguments" since the arguments object does not supply a slice method but can
-         * be the context object to `Array.prototype.slice()`.
-         *
-         * @param {Array} array The array (or arguments object).
-         * @param {Number} begin The index at which to begin. Negative values are offsets from
-         * the end of the array.
-         * @param {Number} end The index at which to end. The copied items do not include
-         * end. Negative values are offsets from the end of the array. If end is omitted,
-         * all items up to the end of the array are copied.
-         * @return {Array} The copied piece of the array.
-         */
         slice: function(array, begin, end) {
             return slice.call(array, begin, end);
         },
@@ -2029,58 +1746,17 @@ Ext.urlAppend = Ext.String.urlAppend;
         },
 
 
-        /**
-         * Removes items from an array. This is functionally equivalent to the splice method
-         * of Array, but works around bugs in IE8's splice method and does not copy the
-         * removed elements in order to return them (because very often they are ignored).
-         *
-         * @param {Array} array The Array on which to replace.
-         * @param {Number} index The index in the array at which to operate.
-         * @param {Number} removeCount The number of items to remove at index.
-         * @return {Array} The array passed.
-         * @method
-         */
+
         erase: erase,
 
-        /**
-         * Inserts items in to an array.
-         *
-         * @param {Array} array The Array on which to replace.
-         * @param {Number} index The index in the array at which to operate.
-         * @param {Array} items The array of items to insert at index.
-         * @return {Array} The array passed.
-         */
+
         insert: function (array, index, items) {
             return replace(array, index, 0, items);
         },
 
-        /**
-         * Replaces items in an array. This is functionally equivalent to the splice method
-         * of Array, but works around bugs in IE8's splice method and is often more convenient
-         * to call because it accepts an array of items to insert rather than use a variadic
-         * argument list.
-         *
-         * @param {Array} array The Array on which to replace.
-         * @param {Number} index The index in the array at which to operate.
-         * @param {Number} removeCount The number of items to remove at index (can be 0).
-         * @param {Array} insert (optional) An array of items to insert at index.
-         * @return {Array} The array passed.
-         * @method
-         */
+
         replace: replace,
 
-        /**
-         * Replaces items in an array. This is equivalent to the splice method of Array, but
-         * works around bugs in IE8's splice method. The signature is exactly the same as the
-         * splice method except that the array is the first argument. All arguments following
-         * removeCount are inserted in the array at index.
-         *
-         * @param {Array} array The Array on which to replace.
-         * @param {Number} index The index in the array at which to operate.
-         * @param {Number} removeCount The number of items to remove at index (can be 0).
-         * @return {Array} An array containing the removed items.
-         * @method
-         */
         splice: splice
     };
 
@@ -2326,47 +2002,7 @@ var ExtObject = Ext.Object = {
         return result;
     },
 
-    /**
-     * Convert a `name` - `value` pair to an array of objects with support for nested structures; useful to construct
-     * query strings. For example:
-     *
-     * Non-recursive:
-     *
-     *     var objects = Ext.Object.toQueryObjects('hobbies', ['reading', 'cooking', 'swimming']);
-     *
-     *     // objects then equals:
-     *     [
-     *         { name: 'hobbies', value: 'reading' },
-     *         { name: 'hobbies', value: 'cooking' },
-     *         { name: 'hobbies', value: 'swimming' }
-     *     ]
-     *
-     * Recursive:
-     *
-     *     var objects = Ext.Object.toQueryObjects('dateOfBirth', {
-     *         day: 3,
-     *         month: 8,
-     *         year: 1987,
-     *         extra: {
-     *             hour: 4,
-     *             minute: 30
-     *         }
-     *     }, true);
-     *
-     *     // objects then equals:
-     *     [
-     *         { name: 'dateOfBirth[day]', value: 3 },
-     *         { name: 'dateOfBirth[month]', value: 8 },
-     *         { name: 'dateOfBirth[year]', value: 1987 },
-     *         { name: 'dateOfBirth[extra][hour]', value: 4 },
-     *         { name: 'dateOfBirth[extra][minute]', value: 30 }
-     *     ]
-     *
-     * @param {String} name
-     * @param {Object} value
-     * @param {Boolean} [recursive=false] `true` to recursively encode any sub-objects.
-     * @return {Object[]} Array of objects with `name` and `value` fields.
-     */
+
     toQueryObjects: function(name, value, recursive) {
         var self = ExtObject.toQueryObjects,
             objects = [],
@@ -2410,39 +2046,7 @@ var ExtObject = Ext.Object = {
         return objects;
     },
 
-    /**
-     * Takes an object and converts it to an encoded query string.
-     *
-     * Non-recursive:
-     *
-     *     Ext.Object.toQueryString({foo: 1, bar: 2}); // returns "foo=1&bar=2"
-     *     Ext.Object.toQueryString({foo: null, bar: 2}); // returns "foo=&bar=2"
-     *     Ext.Object.toQueryString({'some price': '$300'}); // returns "some%20price=%24300"
-     *     Ext.Object.toQueryString({date: new Date(2011, 0, 1)}); // returns "date=%222011-01-01T00%3A00%3A00%22"
-     *     Ext.Object.toQueryString({colors: ['red', 'green', 'blue']}); // returns "colors=red&colors=green&colors=blue"
-     *
-     * Recursive:
-     *
-     *     Ext.Object.toQueryString({
-     *         username: 'Jacky',
-     *         dateOfBirth: {
-     *             day: 1,
-     *             month: 2,
-     *             year: 1911
-     *         },
-     *         hobbies: ['coding', 'eating', 'sleeping', ['nested', 'stuff']]
-     *     }, true);
-     *
-     *     // returns the following string (broken down and url-decoded for ease of reading purpose):
-     *     // username=Jacky
-     *     //    &dateOfBirth[day]=1&dateOfBirth[month]=2&dateOfBirth[year]=1911
-     *     //    &hobbies[0]=coding&hobbies[1]=eating&hobbies[2]=sleeping&hobbies[3][0]=nested&hobbies[3][1]=stuff
-     *
-     * @param {Object} object The object to encode.
-     * @param {Boolean} [recursive=false] Whether or not to interpret the object in recursive format.
-     * (PHP / Ruby on Rails servers and similar).
-     * @return {String} queryString
-     */
+
     toQueryString: function(object, recursive) {
         var paramObjects = [],
             params = [],
@@ -2471,36 +2075,6 @@ var ExtObject = Ext.Object = {
         return params.join('&');
     },
 
-    /**
-     * Converts a query string back into an object.
-     *
-     * Non-recursive:
-     *
-     *     Ext.Object.fromQueryString("foo=1&bar=2"); // returns {foo: 1, bar: 2}
-     *     Ext.Object.fromQueryString("foo=&bar=2"); // returns {foo: null, bar: 2}
-     *     Ext.Object.fromQueryString("some%20price=%24300"); // returns {'some price': '$300'}
-     *     Ext.Object.fromQueryString("colors=red&colors=green&colors=blue"); // returns {colors: ['red', 'green', 'blue']}
-     *
-     * Recursive:
-     *
-     *     Ext.Object.fromQueryString("username=Jacky&dateOfBirth[day]=1&dateOfBirth[month]=2&dateOfBirth[year]=1911&hobbies[0]=coding&hobbies[1]=eating&hobbies[2]=sleeping&hobbies[3][0]=nested&hobbies[3][1]=stuff", true);
-     *
-     *     // returns
-     *     {
-     *         username: 'Jacky',
-     *         dateOfBirth: {
-     *             day: '1',
-     *             month: '2',
-     *             year: '1911'
-     *         },
-     *         hobbies: ['coding', 'eating', 'sleeping', ['nested', 'stuff']]
-     *     }
-     *
-     * @param {String} queryString The query string to decode.
-     * @param {Boolean} [recursive=false] Whether or not to recursively decode the string. This format is supported by
-     * PHP / Ruby on Rails servers and similar.
-     * @return {Object}
-     */
     fromQueryString: function(queryString, recursive) {
         var parts = queryString.replace(/^\?/, '').split('&'),
             object = {},
@@ -2579,31 +2153,7 @@ var ExtObject = Ext.Object = {
         return object;
     },
 
-    /**
-     * Iterate through an object and invoke the given callback function for each iteration. The iteration can be stop
-     * by returning `false` in the callback function. For example:
-     *
-     *     var person = {
-     *         name: 'Jacky',
-     *         hairColor: 'black',
-     *         loves: ['food', 'sleeping', 'wife']
-     *     };
-     *
-     *     Ext.Object.each(person, function(key, value, myself) {
-     *         console.log(key + ":" + value);
-     *
-     *         if (key === 'hairColor') {
-     *             return false; // stop the iteration
-     *         }
-     *     });
-     *
-     * @param {Object} object The object to iterate
-     * @param {Function} fn The callback function.
-     * @param {String} fn.key
-     * @param {Mixed} fn.value
-     * @param {Object} fn.object The object itself
-     * @param {Object} [scope] The execution scope (`this`) of the callback function
-     */
+ 
     each: function(object, fn, scope) {
         for (var property in object) {
             if (object.hasOwnProperty(property)) {
@@ -2614,47 +2164,6 @@ var ExtObject = Ext.Object = {
         }
     },
 
-    /**
-     * Merges any number of objects recursively without referencing them or their children.
-     *
-     *     var extjs = {
-     *         companyName: 'Ext JS',
-     *         products: ['Ext JS', 'Ext GWT', 'Ext Designer'],
-     *         isSuperCool: true,
-     *         office: {
-     *             size: 2000,
-     *             location: 'Palo Alto',
-     *             isFun: true
-     *         }
-     *     };
-     *
-     *     var newStuff = {
-     *         companyName: 'Sencha Inc.',
-     *         products: ['Ext JS', 'Ext GWT', 'Ext Designer', 'Sencha Touch', 'Sencha Animator'],
-     *         office: {
-     *             size: 40000,
-     *             location: 'Redwood City'
-     *         }
-     *     };
-     *
-     *     var sencha = Ext.Object.merge({}, extjs, newStuff);
-     *
-     *     // sencha then equals to
-     *     {
-     *         companyName: 'Sencha Inc.',
-     *         products: ['Ext JS', 'Ext GWT', 'Ext Designer', 'Sencha Touch', 'Sencha Animator'],
-     *         isSuperCool: true
-     *         office: {
-     *             size: 40000,
-     *             location: 'Redwood City'
-     *             isFun: true
-     *         }
-     *     }
-     *
-     * @param {Object} source The first object into which to merge the others.
-     * @param {Object...} objs One or more objects to be merged into the first.
-     * @return {Object} The object that is created as a result of merging all the objects passed in.
-     */
     merge: function(source) {
         var i = 1,
             ln = arguments.length,
@@ -2931,34 +2440,6 @@ Ext.urlDecode = function() {
  */
 Ext.Function = {
 
-    /**
-     * A very commonly used method throughout the framework. It acts as a wrapper around another method
-     * which originally accepts 2 arguments for `name` and `value`.
-     * The wrapped function then allows "flexible" value setting of either:
-     *
-     * - `name` and `value` as 2 arguments
-     * - one single object argument with multiple key - value pairs
-     *
-     * For example:
-     *
-     *     var setValue = Ext.Function.flexSetter(function(name, value) {
-     *         this[name] = value;
-     *     });
-     *
-     *     // Afterwards
-     *     // Setting a single name - value
-     *     setValue('name1', 'value1');
-     *
-     *     // Settings multiple name - value pairs
-     *     setValue({
-     *         name1: 'value1',
-     *         name2: 'value2',
-     *         name3: 'value3'
-     *     });
-     *
-     * @param {Function} setter
-     * @return {Function} flexSetter
-     */
     flexSetter: function(fn) {
         return function(a, b) {
             var k, i;
@@ -3030,29 +2511,7 @@ Ext.Function = {
         };
     },
 
-    /**
-     * Create a new function from the provided `fn`, the arguments of which are pre-set to `args`.
-     * New arguments passed to the newly created callback when it's invoked are appended after the pre-set ones.
-     * This is especially useful when creating callbacks.
-     *
-     * For example:
-     *
-     *     var originalFunction = function(){
-     *         alert(Ext.Array.from(arguments).join(' '));
-     *     };
-     *
-     *     var callback = Ext.Function.pass(originalFunction, ['Hello', 'World']);
-     *
-     *     callback(); // alerts 'Hello World'
-     *     callback('by Me'); // alerts 'Hello World by Me'
-     *
-     * {@link Ext#pass Ext.pass} is alias for {@link Ext.Function#pass Ext.Function.pass}
-     *
-     * @param {Function} fn The original function.
-     * @param {Array} args The arguments to pass to new callback.
-     * @param {Object} scope (optional) The scope (`this` reference) in which the function is executed.
-     * @return {Function} The new callback function.
-     */
+
     pass: function(fn, args, scope) {
         if (!Ext.isArray(args)) {
             args = Ext.Array.clone(args);
@@ -3090,34 +2549,6 @@ Ext.Function = {
             return method.apply(this, arguments);
         };
     },
-
-    /**
-     * Creates an interceptor function. The passed function is called before the original one. If it returns false,
-     * the original one is not called. The resulting function returns the results of the original function.
-     * The passed function is called with the parameters of the original function. Example usage:
-     *
-     *     var sayHi = function(name){
-     *         alert('Hi, ' + name);
-     *     };
-     *
-     *     sayHi('Fred'); // alerts "Hi, Fred"
-     *
-     *     // create a new function that validates input without
-     *     // directly modifying the original function:
-     *     var sayHiToFriend = Ext.Function.createInterceptor(sayHi, function(name){
-     *         return name === 'Brian';
-     *     });
-     *
-     *     sayHiToFriend('Fred');  // no alert
-     *     sayHiToFriend('Brian'); // alerts "Hi, Brian"
-     *
-     * @param {Function} origFn The original function.
-     * @param {Function} newFn The function to call before the original.
-     * @param {Object} scope (optional) The scope (`this` reference) in which the passed function is executed.
-     * **If omitted, defaults to the scope in which the original function is called or the browser window.**
-     * @param {Object} [returnValue=null] (optional) The value to return if the passed function return `false`.
-     * @return {Function} The new function.
-     */
     createInterceptor: function(origFn, newFn, scope, returnValue) {
         var method = origFn;
         if (!Ext.isFunction(newFn)) {
