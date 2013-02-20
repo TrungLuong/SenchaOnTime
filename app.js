@@ -35,15 +35,6 @@
      */
     Ext.enumerables = enumerables;
 
-    /**
-     * Copies all the properties of config to the specified object.
-     * Note that if recursive merging and cloning without referencing the original objects / arrays is needed, use
-     * {@link Ext.Object#merge} instead.
-     * @param {Object} object The receiver of the properties.
-     * @param {Object} config The source of the properties.
-     * @param {Object} [defaults] A different object that will also be applied for default values.
-     * @return {Object} returns obj
-     */
     Ext.apply = function(object, config, defaults) {
         if (defaults) {
             Ext.apply(object, defaults);
@@ -103,17 +94,6 @@
             return object;
         },
 
-        /**
-         * Iterates either an array or an object. This method delegates to
-         * {@link Ext.Array#each Ext.Array.each} if the given value is iterable, and {@link Ext.Object#each Ext.Object.each} otherwise.
-         *
-         * @param {Object/Array} object The object or array to be iterated.
-         * @param {Function} fn The function to be called for each iteration. See and {@link Ext.Array#each Ext.Array.each} and
-         * {@link Ext.Object#each Ext.Object.each} for detailed lists of arguments passed to this function depending on the given object
-         * type that is being iterated.
-         * @param {Object} scope (Optional) The scope (`this` reference) in which the specified function is executed.
-         * Defaults to the object being iterated itself.
-         */
         iterate: function(object, fn, scope) {
             if (Ext.isEmpty(object)) {
                 return;
@@ -134,14 +114,6 @@
 
     Ext.apply(Ext, {
 
-        /**
-         * This method deprecated. Use {@link Ext#define Ext.define} instead.
-         * @method
-         * @param {Function} superclass
-         * @param {Object} overrides
-         * @return {Function} The subclass constructor from the `overrides` parameter, or a generated one if not provided.
-         * @deprecated 4.0.0 Please use {@link Ext#define Ext.define} instead
-         */
         extend: function() {
             // inline overrides
             var objectConstructor = objectPrototype.constructor,
@@ -194,15 +166,7 @@
             };
         }(),
 
-        /**
-         * Proxy to {@link Ext.Base#override}. Please refer {@link Ext.Base#override} for further details.
-         *
-         * @param {Object} cls The class to override
-         * @param {Object} overrides The properties to add to `origClass`. This should be specified as an object literal
-         * containing one or more properties.
-         * @method override
-         * @deprecated 4.1.0 Please use {@link Ext#define Ext.define} instead.
-         */
+ 
         override: function(cls, overrides) {
             if (cls.$isClass) {
                 return cls.override(overrides);
@@ -216,39 +180,12 @@
     // A full set of static methods to do type checking
     Ext.apply(Ext, {
 
-        /**
-         * Returns the given value itself if it's not empty, as described in {@link Ext#isEmpty}; returns the default
-         * value (second argument) otherwise.
-         *
-         * @param {Object} value The value to test.
-         * @param {Object} defaultValue The value to return if the original value is empty.
-         * @param {Boolean} [allowBlank=false] (optional) `true` to allow zero length strings to qualify as non-empty.
-         * @return {Object} `value`, if non-empty, else `defaultValue`.
-         */
+     
         valueFrom: function(value, defaultValue, allowBlank){
             return Ext.isEmpty(value, allowBlank) ? defaultValue : value;
         },
 
-        /**
-         * Returns the type of the given variable in string format. List of possible values are:
-         *
-         * - `undefined`: If the given value is `undefined`
-         * - `null`: If the given value is `null`
-         * - `string`: If the given value is a string
-         * - `number`: If the given value is a number
-         * - `boolean`: If the given value is a boolean value
-         * - `date`: If the given value is a `Date` object
-         * - `function`: If the given value is a function reference
-         * - `object`: If the given value is an object
-         * - `array`: If the given value is an array
-         * - `regexp`: If the given value is a regular expression
-         * - `element`: If the given value is a DOM Element
-         * - `textnode`: If the given value is a DOM text node and contains something other than whitespace
-         * - `whitespace`: If the given value is a DOM text node and contains only whitespace
-         *
-         * @param {Object} value
-         * @return {String}
-         */
+ 
         typeOf: function(value) {
             if (value === null) {
                 return 'null';
@@ -294,18 +231,6 @@
 
         },
 
-        /**
-         * Returns `true` if the passed value is empty, `false` otherwise. The value is deemed to be empty if it is either:
-         *
-         * - `null`
-         * - `undefined`
-         * - a zero-length array.
-         * - a zero-length string (Unless the `allowEmptyString` parameter is set to `true`).
-         *
-         * @param {Object} value The value to test.
-         * @param {Boolean} [allowEmptyString=false] (optional) `true` to allow empty strings.
-         * @return {Boolean}
-         */
         isEmpty: function(value, allowEmptyString) {
             return (value === null) || (value === undefined) || (!allowEmptyString ? value === '' : false) || (Ext.isArray(value) && value.length === 0);
         },
