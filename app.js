@@ -35,6 +35,15 @@
      */
     Ext.enumerables = enumerables;
 
+    /**
+     * Copies all the properties of config to the specified object.
+     * Note that if recursive merging and cloning without referencing the original objects / arrays is needed, use
+     * {@link Ext.Object#merge} instead.
+     * @param {Object} object The receiver of the properties.
+     * @param {Object} config The source of the properties.
+     * @param {Object} [defaults] A different object that will also be applied for default values.
+     * @return {Object} returns obj
+     */
     Ext.apply = function(object, config, defaults) {
         if (defaults) {
             Ext.apply(object, defaults);
@@ -94,6 +103,17 @@
             return object;
         },
 
+        /**
+         * Iterates either an array or an object. This method delegates to
+         * {@link Ext.Array#each Ext.Array.each} if the given value is iterable, and {@link Ext.Object#each Ext.Object.each} otherwise.
+         *
+         * @param {Object/Array} object The object or array to be iterated.
+         * @param {Function} fn The function to be called for each iteration. See and {@link Ext.Array#each Ext.Array.each} and
+         * {@link Ext.Object#each Ext.Object.each} for detailed lists of arguments passed to this function depending on the given object
+         * type that is being iterated.
+         * @param {Object} scope (Optional) The scope (`this` reference) in which the specified function is executed.
+         * Defaults to the object being iterated itself.
+         */
         iterate: function(object, fn, scope) {
             if (Ext.isEmpty(object)) {
                 return;
@@ -114,6 +134,14 @@
 
     Ext.apply(Ext, {
 
+        /**
+         * This method deprecated. Use {@link Ext#define Ext.define} instead.
+         * @method
+         * @param {Function} superclass
+         * @param {Object} overrides
+         * @return {Function} The subclass constructor from the `overrides` parameter, or a generated one if not provided.
+         * @deprecated 4.0.0 Please use {@link Ext#define Ext.define} instead
+         */
         extend: function() {
             // inline overrides
             var objectConstructor = objectPrototype.constructor,
@@ -166,7 +194,15 @@
             };
         }(),
 
- 
+        /**
+         * Proxy to {@link Ext.Base#override}. Please refer {@link Ext.Base#override} for further details.
+         *
+         * @param {Object} cls The class to override
+         * @param {Object} overrides The properties to add to `origClass`. This should be specified as an object literal
+         * containing one or more properties.
+         * @method override
+         * @deprecated 4.1.0 Please use {@link Ext#define Ext.define} instead.
+         */
         override: function(cls, overrides) {
             if (cls.$isClass) {
                 return cls.override(overrides);
@@ -180,12 +216,39 @@
     // A full set of static methods to do type checking
     Ext.apply(Ext, {
 
-     
+        /**
+         * Returns the given value itself if it's not empty, as described in {@link Ext#isEmpty}; returns the default
+         * value (second argument) otherwise.
+         *
+         * @param {Object} value The value to test.
+         * @param {Object} defaultValue The value to return if the original value is empty.
+         * @param {Boolean} [allowBlank=false] (optional) `true` to allow zero length strings to qualify as non-empty.
+         * @return {Object} `value`, if non-empty, else `defaultValue`.
+         */
         valueFrom: function(value, defaultValue, allowBlank){
             return Ext.isEmpty(value, allowBlank) ? defaultValue : value;
         },
 
- 
+        /**
+         * Returns the type of the given variable in string format. List of possible values are:
+         *
+         * - `undefined`: If the given value is `undefined`
+         * - `null`: If the given value is `null`
+         * - `string`: If the given value is a string
+         * - `number`: If the given value is a number
+         * - `boolean`: If the given value is a boolean value
+         * - `date`: If the given value is a `Date` object
+         * - `function`: If the given value is a function reference
+         * - `object`: If the given value is an object
+         * - `array`: If the given value is an array
+         * - `regexp`: If the given value is a regular expression
+         * - `element`: If the given value is a DOM Element
+         * - `textnode`: If the given value is a DOM text node and contains something other than whitespace
+         * - `whitespace`: If the given value is a DOM text node and contains only whitespace
+         *
+         * @param {Object} value
+         * @return {String}
+         */
         typeOf: function(value) {
             if (value === null) {
                 return 'null';
@@ -231,6 +294,18 @@
 
         },
 
+        /**
+         * Returns `true` if the passed value is empty, `false` otherwise. The value is deemed to be empty if it is either:
+         *
+         * - `null`
+         * - `undefined`
+         * - a zero-length array.
+         * - a zero-length string (Unless the `allowEmptyString` parameter is set to `true`).
+         *
+         * @param {Object} value The value to test.
+         * @param {Boolean} [allowEmptyString=false] (optional) `true` to allow empty strings.
+         * @return {Boolean}
+         */
         isEmpty: function(value, allowEmptyString) {
             return (value === null) || (value === undefined) || (!allowEmptyString ? value === '' : false) || (Ext.isArray(value) && value.length === 0);
         },
@@ -7080,13 +7155,13 @@ var noArgs = [],
  * ## Asynchronous Loading
  *
  * - Advantages:
- *  + Cross-domain
- *  + No web server needed: you can run the application via the file system protocol (i.e: `file://path/to/your/index
+ * 	+ Cross-domain
+ * 	+ No web server needed: you can run the application via the file system protocol (i.e: `file://path/to/your/index
  *  .html`)
- *  + Best possible debugging experience: error messages come with the exact file name and line number
+ * 	+ Best possible debugging experience: error messages come with the exact file name and line number
  *
  * - Disadvantages:
- *  + Dependencies need to be specified before-hand
+ * 	+ Dependencies need to be specified before-hand
  *
  * ### Method 1: Explicitly include what you need: ###
  *
@@ -7121,13 +7196,13 @@ var noArgs = [],
  * # Synchronous Loading on Demand #
  *
  * - *Advantages:*
- *  + There's no need to specify dependencies before-hand, which is always the convenience of including ext-all.js
+ * 	+ There's no need to specify dependencies before-hand, which is always the convenience of including ext-all.js
  *  before
  *
  * - *Disadvantages:*
- *  + Not as good debugging experience since file name won't be shown (except in Firebug at the moment)
- *  + Must be from the same domain due to XHR restriction
- *  + Need a web server, same reason as above
+ * 	+ Not as good debugging experience since file name won't be shown (except in Firebug at the moment)
+ * 	+ Must be from the same domain due to XHR restriction
+ * 	+ Need a web server, same reason as above
  *
  * There's one simple rule to follow: Instantiate everything with Ext.create instead of the `new` keyword
  *
@@ -12673,8 +12748,8 @@ Ext.dom.Element.addMembers({
             force = !this.hasCls(className);
         }
 
-      return (force) ? this.addCls(className) : this.removeCls(className);
-    },
+   		return (force) ? this.addCls(className) : this.removeCls(className);
+   	},
 
     /**
      * @private
@@ -32705,7 +32780,7 @@ Ext.define('Ext.Button', {
             me.refreshIconAlign();
         }
         else {
-          element.setStyle('background-image', '');
+        	element.setStyle('background-image', '');
             me.hideIconElement();
             me.setIconAlign(false);
         }
@@ -32724,7 +32799,7 @@ Ext.define('Ext.Button', {
             me.refreshIconAlign();
         }
         else {
-      element.removeCls(oldIconCls);
+			element.removeCls(oldIconCls);
             me.hideIconElement();
             me.setIconAlign(false);
         }
@@ -50293,12 +50368,12 @@ Ext.define('Ext.util.Inflector', {
             woman: 'women',
             child: 'children',
             man: 'men',
-            corpus: 'corpora',
+            corpus:	'corpora',
             criterion: 'criteria',
-            curriculum: 'curricula',
+            curriculum:	'curricula',
             genus: 'genera',
-            memorandum: 'memoranda',
-            phenomenon: 'phenomena',
+            memorandum:	'memoranda',
+            phenomenon:	'phenomena',
             foot: 'feet',
             goose: 'geese',
             tooth: 'teeth',
@@ -62691,7 +62766,7 @@ Ext.define('Ext.util.InputBlocker', {
     blockInputs: function () {
         if (Ext.browser.is.ie) {
             Ext.select('.x-field-text .x-field-input:not(.x-item-disabled) .x-input-el, .x-field-textarea .x-field-input:not(.x-item-disabled) .x-input-el').each(function (item) {
-        if(item.dom.offsetWidth > 0){
+				if(item.dom.offsetWidth > 0){
                     item.dom.setAttribute('disabled', true);
                     item.dom.setAttribute('overlayfix', true);
                 }
@@ -62788,39 +62863,39 @@ Ext.define('Ext.viewport.Viewport', {
  */
 
 Ext.define('ToDoAlpha.view.control.AddOnTimeline', {
-  extend : 'Ext.Container',
-  xtype : 'addtimeline',
-  requires: ['Ext.field.Text'],
-  config:{
-    width: '100%',
-    id: 'conAddTimeline',
-    hidden: true,
-    //cls: 'adding-task',
-    items: [
-          {
-            xtype: 'textfield',
-            id: 'txtAddTimeline',
-            clearIcon: false,
-            cls: 'input-add-timeline timeline-event',
-            style: 'background: none'
-          }],
-    listeners:{
-      hide: function(){
-        this.child('#txtAddTimeline').setValue('');
-      }
-    } 
-    }
+	extend : 'Ext.Container',
+	xtype : 'addtimeline',
+	requires: ['Ext.field.Text'],
+	config:{
+		width: '100%',
+		id: 'conAddTimeline',
+		hidden: true,
+	  //cls: 'adding-task',
+		items: [
+	        {
+	        	xtype: 'textfield',
+	        	id: 'txtAddTimeline',
+	        	clearIcon: false,
+	        	cls: 'input-add-timeline timeline-event',
+	        	style: 'background: none'
+	        }],
+	  listeners:{
+	    hide: function(){
+	      this.child('#txtAddTimeline').setValue('');
+	    }
+	  } 
+		}
 });
 
 Ext.define('ToDoAlpha.view.control.HourButton', {
     extend: 'Ext.Button',
     xtype: 'hourbutton',
     config: {
-    action: 'hourButton',
-    hour: 0,
-    ui: 'plain',
-    cls: 'hour',
-    listeners : {
+		action: 'hourButton',
+		hour: 0,
+		ui: 'plain',
+		cls: 'hour',
+		listeners : {
             element : 'element',
             taphold : function() {
                 this.fireEvent('hourtaphold', this);
@@ -62837,103 +62912,103 @@ Ext.define('ToDoAlpha.controller.Timeline', {
     
     config: {
         refs: {
-          conMainLine: '#conMainLine',
-          conTimeList: '#conTimeList',
-          conTaskList: '#conTaskList',
-          conCalendar: '#conCalendar',
-          conAddTimeline: '#conAddTimeline',
+        	conMainLine: '#conMainLine',
+        	conTimeList: '#conTimeList',
+        	conTaskList: '#conTaskList',
+        	conCalendar: '#conCalendar',
+        	conAddTimeline: '#conAddTimeline',
             hourButton: 'button[action=hourButton]'
         },
         control: {
             hourButton: {
-              tap: 'onHourButtonTab',
-              hourtaphold: 'onHourButtonTabhold'
+            	tap: 'onHourButtonTab',
+            	hourtaphold: 'onHourButtonTabhold'
             }
         }
     },
     launch: function(){
         //this.callParent(arguments);
-    Ext.namespace('Timeline');
-    Timeline.Controler = this;
+		Ext.namespace('Timeline');
+		Timeline.Controler = this;
     },
     onHourButtonTab: function(button, e, eOpts){
-        var txt = this.getConAddTimeline(); 
-        txt.setTop(button.getTop());
-        txt.show();
-        txt.child('#txtAddTimeline').on('blur', this.onAddTimelineEnter);
-        txt.child('#txtAddTimeline').config.hour = button.getHour();
-        //document.getElementsByClassName('x-input-text')[0].focus();
-        //Ext.getCmp('txtAddTimeline').focus(true, 2000);
-        if(/(Android)/.test(navigator.userAgent)){
-          setTimeout(function(){Ext.getCmp('txtAddTimeline').focus(true,10);},500);
-        }else{
-            Ext.getCmp('txtAddTimeline').focus();
-        }
+    	  var txt = this.getConAddTimeline(); 
+    	  txt.setTop(button.getTop());
+    	  txt.show();
+      	txt.child('#txtAddTimeline').on('blur', this.onAddTimelineEnter);
+      	txt.child('#txtAddTimeline').config.hour = button.getHour();
+      	//document.getElementsByClassName('x-input-text')[0].focus();
+      	//Ext.getCmp('txtAddTimeline').focus(true, 2000);
+      	if(/(Android)/.test(navigator.userAgent)){
+      		setTimeout(function(){Ext.getCmp('txtAddTimeline').focus(true,10);},500);
+      	}else{
+          	Ext.getCmp('txtAddTimeline').focus();
+      	}
     },
     onAddTimelineEnter: function(textField){
-      var title = textField.getValue().capitaliseFirstLetter(),
-         hour = textField.config.hour,
-         minute = textField.config.minute;
-      
-      var top = Timeline.Controler.getConAddTimeline().getTop();
-      var date = Calendar.selectedDate ? Calendar.selectedDate : new Date(),
-        time = Ext.Date.add(Ext.Date.clearTime(date, true), Ext.Date.HOUR, hour),
-        rStore = Ext.getStore('Reminders'),
-        hourIndicator;
-      if(minute != undefined && minute != null){
-        time = Ext.Date.add(time, Ext.Date.MINUTE, minute);
-        hourIndicator = Ext.create('Ext.Button',{
+    	var title = textField.getValue().capitaliseFirstLetter(),
+    	   hour = textField.config.hour,
+    	   minute = textField.config.minute;
+    	
+    	var top = Timeline.Controler.getConAddTimeline().getTop();
+    	var date = Calendar.selectedDate ? Calendar.selectedDate : new Date(),
+    	  time = Ext.Date.add(Ext.Date.clearTime(date, true), Ext.Date.HOUR, hour),
+    		rStore = Ext.getStore('Reminders'),
+    		hourIndicator;
+    	if(minute != undefined && minute != null){
+    		time = Ext.Date.add(time, Ext.Date.MINUTE, minute);
+    		hourIndicator = Ext.create('Ext.Button',{
                 text: Ext.Date.format(time, 'g:i'),
                 top: top,
                 ui: 'plain',
                 pressedCls: '',
                 cls: 'hour-white'});
-      }
-      var h = Ext.Date.format(time, 'G'), 
-         m = parseInt(Ext.Date.format(time, 'i'));
-      if(title.length){
-        rStore.add([{
-          title: title,
-          tasktime: time,
-          isontimeline: true
-         }]);
-        rStore.sync();
-        Timeline.Controler.getConAddTimeline().hide();
-        //Show event to the screen
-        if(hourIndicator != undefined){
-          Timeline.Controler.getConTimeList().add(hourIndicator);
-        }else{
-          var hButton = Ext.getCmp('hourButton' + hour);
+    	}
+    	var h = Ext.Date.format(time, 'G'), 
+    	   m = parseInt(Ext.Date.format(time, 'i'));
+    	if(title.length){
+    		rStore.add([{
+  			  title: title,
+  			  tasktime: time,
+  			  isontimeline: true
+			   }]);
+    		rStore.sync();
+    		Timeline.Controler.getConAddTimeline().hide();
+    		//Show event to the screen
+    		if(hourIndicator != undefined){
+    		  Timeline.Controler.getConTimeList().add(hourIndicator);
+    		}else{
+    		  var hButton = Ext.getCmp('hourButton' + hour);
               if(hButton != undefined){
                 hButton.setCls('hour-white');
               }
         }
-        Timeline.Controler.getConMainLine().add(Ext.create('Ext.Component',{ top: top, cls: 'event-indicator'}));
-        var event= Ext.create('ToDoAlpha.view.control.Event',{
+	    	Timeline.Controler.getConMainLine().add(Ext.create('Ext.Component',{ top: top, cls: 'event-indicator'}));
+	    	var event= Ext.create('ToDoAlpha.view.control.Event',{
           id: 'event-container-' + h + '-' + m,
           top: top,
           html: title.trunc(AppConfig.textTrunc)
         });
         event.addCls('timeline-event');
-        Timeline.Controler.getConTaskList().add(event);
-      }else{
-        Timeline.Controler.getConAddTimeline().hide();
-      }
-      //set Vidible if want to add multi event on an indicator/ hide to disable add
-      //var mIndicator = Ext.getCmp('minute-indicator-' + Ext.Date.format(time, 'G') + '-'+ parseInt(Ext.Date.format(time, 'i')));
-      var mIndicator = document.getElementById('minute-indicator-' + h + '-'+ m);
-      if(mIndicator){
-       mIndicator.style.visibility ='hidden';
-       Ext.getCmp('minute-indicator-' + h + '-'+ m).removeCls('event-indicator-selected');
-       //mIndicator.config.style =('visibility: hidden;');
-      }
+    		Timeline.Controler.getConTaskList().add(event);
+    	}else{
+    		Timeline.Controler.getConAddTimeline().hide();
+    	}
+    	//set Vidible if want to add multi event on an indicator/ hide to disable add
+    	//var mIndicator = Ext.getCmp('minute-indicator-' + Ext.Date.format(time, 'G') + '-'+ parseInt(Ext.Date.format(time, 'i')));
+    	var mIndicator = document.getElementById('minute-indicator-' + h + '-'+ m);
+    	if(mIndicator){
+    	 mIndicator.style.visibility ='hidden';
+    	 Ext.getCmp('minute-indicator-' + h + '-'+ m).removeCls('event-indicator-selected');
+    	 //mIndicator.config.style =('visibility: hidden;');
+    	}
     },
     onHourButtonTabhold: function(button) {
-      Timeline.dragButton = button;
+    	Timeline.dragButton = button;
 
-      var hour = button.getHour();
-      var selector = '.minute-indicator-' + hour + ', .minute-indicator-' + (hour - 1);
-      this.populateTimeStepRegions(selector);
+    	var hour = button.getHour();
+    	var selector = '.minute-indicator-' + hour + ', .minute-indicator-' + (hour - 1);
+    	this.populateTimeStepRegions(selector);
 
       // var sound = Ext.create('Ext.Audio',{
        // url: '../resources/sound/facebook_ringtone_pop.m4a',
@@ -62941,108 +63016,108 @@ Ext.define('ToDoAlpha.controller.Timeline', {
        // hidden:true
       // });
       // sound.play();
-      var hourButton = Ext.create('ToDoAlpha.view.control.HourButton',{
-      text: button.getText(),
-      top: button.getTop(),
-      hour: hour});
-      
-      this.getConTimeList().add(hourButton);
-      var defaultHourSpace = AppConfig.defaultHourSpace;
-      button.setCls('button-hour-draging');
-      button.setDraggable({
+    	var hourButton = Ext.create('ToDoAlpha.view.control.HourButton',{
+			text: button.getText(),
+			top: button.getTop(),
+			hour: hour});
+    	
+    	this.getConTimeList().add(hourButton);
+    	var defaultHourSpace = AppConfig.defaultHourSpace;
+    	button.setCls('button-hour-draging');
+    	button.setDraggable({
             direction: 'vertical',
             constraint: {
                 min: { x: 0, y: -defaultHourSpace },
                 max: { x: 0, y: defaultHourSpace }
             },
             listeners: {
-              dragstart: Timeline.Controler.onHourDragstart,
-              drag: Timeline.Controler.onHourDrag,
+            	dragstart: Timeline.Controler.onHourDragstart,
+            	drag: Timeline.Controler.onHourDrag,
                 dragend: Timeline.Controler.onHourDragend,
                 scope:   Timeline.Controler
             }
-    });
+		});
     },
     onHourDragstart: function(draggable, e, offset, eOpts){
       Timeline.dragButton.setText('');
-      this.getConCalendar().setScrollable(false);
-      Timeline.isHourDragging = true;
+    	this.getConCalendar().setScrollable(false);
+    	Timeline.isHourDragging = true;
     },
     onHourDrag: function(draggable, e, offsetX, offsetY, eOpts){
-      var items = Timeline.minuteIndicators,
-      ln = items.length,
-      pageBoxRegion = draggable.getElement().getPageBox(true),
-      region = Ext.util.Region(pageBoxRegion),
-      i, intersect, item;
-//    hTop = Timeline.dragButton.getTop();
-    
-      for (i = 0; i < ln; i++) {
-        item = items[i];
-        intersect = region.intersect(item);
-        if (intersect) {
-          Ext.get(item.el).setVisibility(true);
-          //This cause crashws
-          //Timeline.dragButton.setText(item.text);
-        }else{
-          Ext.get(item.el).setVisibility(false);
-        }
-      }
+    	var items = Timeline.minuteIndicators,
+			ln = items.length,
+			pageBoxRegion = draggable.getElement().getPageBox(true),
+			region = Ext.util.Region(pageBoxRegion),
+			i, intersect, item;
+//		hTop = Timeline.dragButton.getTop();
+		
+  		for (i = 0; i < ln; i++) {
+  			item = items[i];
+  			intersect = region.intersect(item);
+  			if (intersect) {
+  				Ext.get(item.el).setVisibility(true);
+  				//This cause crashws
+  				//Timeline.dragButton.setText(item.text);
+  			}else{
+  				Ext.get(item.el).setVisibility(false);
+  			}
+  		}
     },
     onHourDragend: function(draggable, e, eOpts){
-      Timeline.isHourDragging = false;
-      //console.log(draggable, e);
-      //Ext.ComponentQuery.query('#conCalendar')[0].setScrollable(true);
-      this.getConCalendar().setScrollable(true);
-      
-      var items = Timeline.minuteIndicators,
-        ln = items.length,
-        pageBoxRegion = draggable.getElement().getPageBox(true),
-        region = Ext.util.Region(pageBoxRegion),
-        i, intersect, item,
+    	Timeline.isHourDragging = false;
+    	//console.log(draggable, e);
+    	//Ext.ComponentQuery.query('#conCalendar')[0].setScrollable(true);
+    	this.getConCalendar().setScrollable(true);
+    	
+    	var items = Timeline.minuteIndicators,
+    		ln = items.length,
+    		pageBoxRegion = draggable.getElement().getPageBox(true),
+    		region = Ext.util.Region(pageBoxRegion),
+    		i, intersect, item,
         dragButton = Timeline.dragButton,
-        hTop = dragButton.getTop(),
-        headerHeight = AppConfig.timelineHeaderHeight,
-        currentY = this.getConCalendar().getScrollable().getScroller().position.y;
-      for (i = 0; i < ln; i++) {
-        item = items[i];
-        intersect = region.intersect(item);
-        if (intersect) {
-          var txt = Timeline.Controler.getConAddTimeline()
+    		hTop = dragButton.getTop(),
+    		headerHeight = AppConfig.timelineHeaderHeight,
+    		currentY = this.getConCalendar().getScrollable().getScroller().position.y;
+  		for (i = 0; i < ln; i++) {
+  			item = items[i];
+  			intersect = region.intersect(item);
+  			if (intersect) {
+			    var txt = Timeline.Controler.getConAddTimeline()
               minute = (item.top - hTop - headerHeight + currentY)/2;
-          
+			    
           txt.setTop(item.top - headerHeight + currentY);
           txt.show();
-          txt.child('#txtAddTimeline').on('blur', this.onAddTimelineEnter);
-          txt.child('#txtAddTimeline').config.hour = dragButton.getHour();
-          txt.child('#txtAddTimeline').config.minute = minute;
-          
-          Ext.getCmp('txtAddTimeline').focus(true,10);
-          var h = dragButton.getHour();
-          if(minute < 0 ){
-            minute = minute + 60;
-            h--;
-          }
-          var mIndicator = Ext.getCmp('minute-indicator-' + h + '-'+ minute);
+		    	txt.child('#txtAddTimeline').on('blur', this.onAddTimelineEnter);
+		    	txt.child('#txtAddTimeline').config.hour = dragButton.getHour();
+		    	txt.child('#txtAddTimeline').config.minute = minute;
+		    	
+		    	Ext.getCmp('txtAddTimeline').focus(true,10);
+		    	var h = dragButton.getHour();
+		    	if(minute < 0 ){
+		    	  minute = minute + 60;
+		    	  h--;
+		    	}
+		    	var mIndicator = Ext.getCmp('minute-indicator-' + h + '-'+ minute);
           if(mIndicator){
            mIndicator.addCls('event-indicator-selected');
           }
-          break;
-        }
-      }
-      Timeline.dragButton.destroy();
+		    	break;
+  			}
+  		}
+    	Timeline.dragButton.destroy();
     },
     populateTimeStepRegions : function(selector) {
-      Timeline.minuteIndicators = [];
-      var els = Ext.get('conMainLine').select(selector).elements,
-      ln = els.length, i, item, el;
-      for (i = 0; i < ln; i++) {
-        el = els[i];
-        item = Ext.get(el).getPageBox(true);
-        item.el = el;
-        item.index = i;
-        item.text = Ext.get(el).child('.x-innerhtml').getHtml();
-        Timeline.minuteIndicators.push(item);
-      }
+    	Timeline.minuteIndicators = [];
+  		var els = Ext.get('conMainLine').select(selector).elements,
+  		ln = els.length, i, item, el;
+  		for (i = 0; i < ln; i++) {
+  			el = els[i];
+  			item = Ext.get(el).getPageBox(true);
+  			item.el = el;
+  			item.index = i;
+  			item.text = Ext.get(el).child('.x-innerhtml').getHtml();
+  			Timeline.minuteIndicators.push(item);
+  		}
     }
 });
 
@@ -63050,25 +63125,25 @@ Ext.define('ToDoAlpha.controller.Todo', {
     extend: 'Ext.app.Controller',
     config: {
         refs: {
-          listTodo: '#listTodo'
+        	listTodo: '#listTodo'
         },
         control: {
         }
     },
     launch: function(){//return;
-      Ext.namespace('Todo');
-      Todo.Controler = this;
-      var taskStore = Ext.getStore('Tasks');
-      taskStore.sort('taskorder', 'ASC');
-      taskStore.clearFilter(true);
-      taskStore.filter([
-        {property: 'isontimeline', value: false},
-        {property: 'iscompleted', value: false}
-                    ]);
-      taskStore.load(function(records, operation, success){
-        Todo.Controler.getListTodo().setStore(taskStore);
-        //Todo.Controler.getListTodo().refresh();
-      });
+    	Ext.namespace('Todo');
+    	Todo.Controler = this;
+    	var taskStore = Ext.getStore('Tasks');
+    	taskStore.sort('taskorder', 'ASC');
+    	taskStore.clearFilter(true);
+    	taskStore.filter([
+	      {property: 'isontimeline', value: false},
+	      {property: 'iscompleted', value: false}
+    	              ]);
+    	taskStore.load(function(records, operation, success){
+    		Todo.Controler.getListTodo().setStore(taskStore);
+    		//Todo.Controler.getListTodo().refresh();
+    	});
     }
 });
 
@@ -63231,7 +63306,6 @@ Ext.define('ToDoAlpha.controller.Calendar', {
         task = Ext.create('Ext.util.DelayedTask', function() {
           me.getConTimeline().paintTimeline();
           me.getConMain().setMasked(false);
-          //me.getConTimeline().removeCls('fade-out-500');
         });
       }else{
         me.getButtonHeaderTime().hide();
@@ -63239,12 +63313,10 @@ Ext.define('ToDoAlpha.controller.Calendar', {
         task = Ext.create('Ext.util.DelayedTask', function() {
           me.getConTimeline().paintCollapsedTimeline();
           me.getConMain().setMasked(false);
-          //me.getConTimeline().removeCls('fade-out-500');
         });
       }
       me.getConCalendar().setHeaderDate(Calendar.selectedDate);
       me.getConMain().setMasked(true);
-      //me.getConTimeline().addCls('fade-out-500');
       task.delay(0);
     }
 });
@@ -63253,7 +63325,7 @@ Ext.define('ToDoAlpha.model.Task', {
     extend: 'Ext.data.Model',
     requires: ['Ext.data.identifier.Uuid'],
     config: {
-      idProperty: "id",
+    	idProperty: "id",
         identifier: {
             type: 'uuid'
         },
@@ -63267,14 +63339,14 @@ Ext.define('ToDoAlpha.model.Task', {
             name : 'tasktime',
             type : 'date'
         }, {
-          name : 'isontimeline',
-          type : 'boolean',
-          defaultValue: false
+        	name : 'isontimeline',
+        	type : 'boolean',
+        	defaultValue: false
         },
         {
             name : 'isrecurrent',
             type : 'boolean',
-          defaultValue: false
+        	defaultValue: false
         }, {
             name : 'isremind',
             type : 'boolean',
@@ -63282,14 +63354,14 @@ Ext.define('ToDoAlpha.model.Task', {
         }, {
             name : 'iscompleted',
             type : 'boolean',
-          defaultValue: false
+        	defaultValue: false
         }, {
             name : 'taskorder',
             type : 'int',
-          defaultValue: 0
+        	defaultValue: 0
         }]
         // validations: [
-            // {type: 'length', field: 'title', min: 1}
+          	// {type: 'length', field: 'title', min: 1}
         // ]
     }
 });
@@ -63298,14 +63370,14 @@ Ext.define('ToDoAlpha.store.Tasks', {
     extend: 'Ext.data.Store',
     requires: ['Ext.data.proxy.LocalStorage'],
     config: {
-      storeId: 'Tasks',
-      model: 'ToDoAlpha.model.Task',
-      sorters: 'taskorder',
-      remoteFilter: true,
+    	storeId: 'Tasks',
+    	model: 'ToDoAlpha.model.Task',
+    	sorters: 'taskorder',
+    	remoteFilter: true,
         remoteSort: true,
         proxy: {
-          type : 'localstorage'
-    }
+        	type : 'localstorage'
+		}
     }
 });
 
@@ -63313,13 +63385,13 @@ Ext.define('ToDoAlpha.store.Reminders', {
     extend: 'Ext.data.Store',
     requires: ['Ext.data.proxy.LocalStorage'],
     config: {
-      storeId: 'Reminders',
-      model: 'ToDoAlpha.model.Task',
-      remoteFilter: true,
+    	storeId: 'Reminders',
+    	model: 'ToDoAlpha.model.Task',
+    	remoteFilter: true,
         remoteSort: true,
         proxy: {
-          type : 'localstorage'
-    }
+        	type : 'localstorage'
+		}
     }
 });
 
@@ -63327,8 +63399,8 @@ Ext.define('ToDoAlpha.view.control.Event', {
     extend: 'Ext.Container',
     xtype: 'timelineevent',
     config: {
-      cls: 'timeline-event-remove',
-      listeners : {
+  		cls: 'timeline-event-remove',
+  		listeners : {
               element : 'element',
               swipe : function(event, node, options, eOpts) {
                   this.onSwipe(this, event, node, options, eOpts);
@@ -63366,11 +63438,11 @@ Ext.define('ToDoAlpha.view.Timeline', {
     xtype: 'timeline',
     requires: ['ToDoAlpha.view.control.HourButton', 'ToDoAlpha.view.control.Event'],
     config: {
-      layout: {
-        type: 'hbox',
-          pack: 'end'
-      },
-      //style: 'min-height: 200px',
+    	layout: {
+    		type: 'hbox',
+        	pack: 'end'
+    	},
+    	//style: 'min-height: 200px',
         items: [
           // {
             // xtype: 'component',
@@ -63393,27 +63465,27 @@ Ext.define('ToDoAlpha.view.Timeline', {
             style: 'top: -50px;position: absolute;',
             cls: 'menu-top-item-tl'
           },
-          {
-            xtype: 'container',
-            id: 'conTaskList',
-            width: '80%'
+ 	        {
+          	xtype: 'container',
+          	id: 'conTaskList',
+          	width: '80%'
           },
-          {
-              xtype: 'container',
-              width: AppConfig.timelineWidth,
-              cls: 'line-gb-color',
-              id: 'conMainLine'
-          },
-          {
-            xtype: 'container',
-            id: 'conTimeList',
-            layout: 'vbox',
-            width: AppConfig.timelistWidth - AppConfig.timelineWidth
-          }
+ 	        {
+ 	            xtype: 'container',
+ 	            width: AppConfig.timelineWidth,
+ 	            cls: 'line-gb-color',
+ 	            id: 'conMainLine'
+ 	        },
+ 	        {
+ 	        	xtype: 'container',
+ 	        	id: 'conTimeList',
+ 	        	layout: 'vbox',
+ 	        	width: AppConfig.timelistWidth - AppConfig.timelineWidth
+ 	        }
         ]
     },
     initialize: function() {
-      this.callParent(arguments);
+    	this.callParent(arguments);
       Ext.namespace('Timeline');
       var store = Ext.getStore('Reminders');
       store.load(function(records, operation, success){
@@ -63609,22 +63681,22 @@ Ext.define('ToDoAlpha.view.Timeline', {
       }, this); 
     },
     paintTimeSteps: function(hourSpace, top, isFirstHour, hour){
-      var appConfig = AppConfig,
-        stepSpace = appConfig.timeStep * appConfig.defaultHourSpace / 60,
-        start = isFirstHour ? 0 : stepSpace,
-        hHtml, m;
-      for(var j = start; j <= hourSpace; j += stepSpace){
-        hHtml = ''; m = j/2;
-        if (m == 60) {hour ++; m = 0;}
-        var h12 = AppHelper.getHour12(hour),
+  		var appConfig = AppConfig,
+  			stepSpace = appConfig.timeStep * appConfig.defaultHourSpace / 60,
+  			start = isFirstHour ? 0 : stepSpace,
+  			hHtml, m;
+  		for(var j = start; j <= hourSpace; j += stepSpace){
+  			hHtml = ''; m = j/2;
+  			if (m == 60) {hour ++; m = 0;}
+  			var h12 = AppHelper.getHour12(hour),
         hHtml = h12.hour + ':' + m + ' ' +  h12.ap;
-        this.child('#conMainLine').add(Ext.create('Ext.Component',
-         { top: top + j, 
-           id: 'minute-indicator-' + hour + '-' + m, 
-           cls: 'minute-indicator-' + hour + ' time-indicator event-indicator-hover', 
-           html: hHtml, 
-           style: 'visibility: hidden; '}));
-      }
+  			this.child('#conMainLine').add(Ext.create('Ext.Component',
+  			 { top: top + j, 
+  			   id: 'minute-indicator-' + hour + '-' + m, 
+  			   cls: 'minute-indicator-' + hour + ' time-indicator event-indicator-hover', 
+  			   html: hHtml, 
+  			   style: 'visibility: hidden; '}));
+  		}
     },
     paintCollapsedTimeline: function(){
       Timeline.collapsed = true;
@@ -63754,69 +63826,62 @@ Ext.define('ToDoAlpha.view.control.MonthPicker', {
 });
 
 Ext.define('ToDoAlpha.view.Calendar', {
-  extend : 'Ext.Container',
-  xtype : 'calendar',
-  requires : [ 'ToDoAlpha.view.Timeline', 'Ext.Spacer', 'ToDoAlpha.view.control.DayPicker', 'ToDoAlpha.view.control.MonthPicker'],
-  config : {
-    //style : 'background-color: green',
-    scrollable : true,
-    items : [ {
-      xtype : 'container',
-      //style : 'background-color: grey',
-      docked : 'top',
-      height: AppConfig.timelineHeaderHeight,
-      id : 'tlToolBar',
-      cls: 'timeline-header',
-      layout: 'hbox',
-      items: [
+	extend : 'Ext.Container',
+	xtype : 'calendar',
+	requires : [ 'ToDoAlpha.view.Timeline', 'Ext.Spacer', 'ToDoAlpha.view.control.DayPicker', 'ToDoAlpha.view.control.MonthPicker'],
+	config : {
+		scrollable : true,
+		items : [ {
+			xtype : 'container',
+			docked : 'top',
+			height: AppConfig.timelineHeaderHeight,
+			id : 'tlToolBar',
+			cls: 'timeline-header',
+			layout: 'hbox',
+			items: [
              {
                xtype: 'component',
                id: 'headerToday',
               cls:'today-text',
               html: 'TODAY'
              },
-            {
-              xtype : 'button',
-              ui: 'plain',
-              id: 'headerDay'
-            },
-            {
-              xtype: 'spacer'
-            },
-            {
-              xtype : 'component',
-              id: 'headerTime',
-              listeners: {
-                element: 'element',
-                tap: function(){
-                  Calendar.container.getScrollable().getScroller().scrollTo(0,0, true);
-                  Ext.getCmp('listTodo').getScrollable().getScroller().scrollTo(0,0, true);
-                }
-              }
-            },
+		        {
+		        	xtype : 'button',
+		        	ui: 'plain',
+		        	id: 'headerDay'
+		        },
+		        {
+		        	xtype: 'spacer'
+		        },
+		        {
+		        	xtype : 'component',
+		        	id: 'headerTime',
+		        	listeners: {
+		        	  element: 'element',
+		        	  tap: function(){
+		        	    Calendar.container.getScrollable().getScroller().scrollTo(0,0, true);
+		        	    Ext.getCmp('listTodo').getScrollable().getScroller().scrollTo(0,0, true);
+		        	  }
+		        	}
+		        },
             {
               xtype: 'daypicker'
             },
             {
               xtype: 'monthpicker'
             }
-              ]
-    }, 
-//    {
-//      xtype : 'container',
-//      style : 'background-color: #A9F5BC',
-//      //width: '50px'
-//    }, 
-    {
-      xtype : 'timeline',
-      id: 'conTimeline'
-    }
-    ]
-  },
-  initialize : function() {
-    this.callParent(arguments);
-    Ext.namespace('Calendar');
-    Calendar.container = this;
+			        ]
+		}, 
+		{
+			xtype : 'timeline',
+			id: 'conTimeline'
+		}
+		]
+	},
+	initialize : function() {
+		this.callParent(arguments);
+	  Ext.namespace('Calendar');
+	  Calendar.container = this;
     var scroller = this.getScrollable().getScroller();
     scroller.on({
       scroll: this.onScrollChange,
@@ -63826,14 +63891,12 @@ Ext.define('ToDoAlpha.view.Calendar', {
         dragend: function(){Calendar.container.onScrollDragend(scroller)},
         scope: this
     });
-    var date = new Date();
-    //var todayHtml = '<div class="day-header">TODAY</div><div class="day-header-details" style="margin-top:13px">'+ 
-      //Ext.Date.format(date, 'M') + '<br/>' + Ext.Date.format(date, 'j') +'</div>';
-      this.setHeaderDate(date);
-      this.setCurrentTime();
-  },
-  setHeaderDate: function(date){
-    var todayHtml = '<div id="divDayNumberText" class="day-header"> ' + Ext.Date.format(date, 'd') + '</div><div class="day-header-details">\
+		var date = new Date();
+			this.setHeaderDate(date);
+			this.setCurrentTime();
+	},
+	setHeaderDate: function(date){
+	  var todayHtml = '<div id="divDayNumberText" class="day-header"> ' + Ext.Date.format(date, 'd') + '</div><div class="day-header-details">\
       <span id="spanMonthText" style="font-size: 0.9em;">' 
       + Ext.Date.format(date, 'F').toUpperCase() + '</span> \
         <br><span id="spanWeedDayText" style=" \
@@ -63842,23 +63905,23 @@ Ext.define('ToDoAlpha.view.Calendar', {
         ">' + Ext.Date.format(date, 'l').toUpperCase() +'</span> \
         </div>';
     this.down('#headerDay').setHtml(todayHtml);
-  },
+	},
     setCurrentTime: function(){
-      var me = this;
-      var today = new Date(),
-        h=today.getHours(),
-        m=today.getMinutes(),
-        s=today.getSeconds(),
-        ap = 'AM';
-      m = m > 9 ? m : '0' + m;
-      s = s > 9 ? s : '0' + s;
-      if(h > 12){
-        h = h - 12;
-        ap = 'PM';
-      }
-      var timeHtml = '<div style="padding: 13px 13px 0px 0px; font-size: 1.1em; line-height: 18px">'+h+':'+m+'<div class="time-header-details">'+s+ ' ' + ap + '</div><div>';
-      this.down('#headerTime').setHtml(timeHtml);
-      t=setTimeout(function(){me.setCurrentTime()},1000);
+    	var me = this;
+    	var today = new Date(),
+    		h=today.getHours(),
+    		m=today.getMinutes(),
+    		s=today.getSeconds(),
+    		ap = 'AM';
+    	m = m > 9 ? m : '0' + m;
+    	s = s > 9 ? s : '0' + s;
+    	if(h > 12){
+    		h = h - 12;
+    		ap = 'PM';
+    	}
+    	var timeHtml = '<div style="padding: 13px 13px 0px 0px; font-size: 1.1em; line-height: 18px">'+h+':'+m+'<div class="time-header-details">'+s+ ' ' + ap + '</div><div>';
+    	this.down('#headerTime').setHtml(timeHtml);
+    	t=setTimeout(function(){me.setCurrentTime()},1000);
     }, 
     onScrollChange: function(scroller, x, y){
       if (y < 0 && scroller.isTouching) {
@@ -63907,28 +63970,28 @@ Ext.define('ToDoAlpha.view.Calendar', {
 });
 
 Ext.define('ToDoAlpha.view.control.AddOnTodo', {
-  extend : 'Ext.Container',
-  xtype : 'addtodo',
-  requires: ['Ext.field.Text'],
-  config:{
-    layout: 'vbox',
-    width: '100%',
-    height: '100%',
-    id: 'conAddTodo',
-    items: [
-          {
-            xtype: 'textfield',
-            id: 'txtAddTodo',
-            clearIcon: false,
-            width: '100%',
-            height: '100%',
-            cls: 'input-add-todo',
-            style: 'background: none',
-            listeners: {
-              painted: function(){ this.focus();}
-            }
-          }]
-    }
+	extend : 'Ext.Container',
+	xtype : 'addtodo',
+	requires: ['Ext.field.Text'],
+	config:{
+		layout: 'vbox',
+		width: '100%',
+		height: '100%',
+		id: 'conAddTodo',
+		items: [
+	        {
+	        	xtype: 'textfield',
+	        	id: 'txtAddTodo',
+	        	clearIcon: false,
+	        	width: '100%',
+	        	height: '100%',
+	        	cls: 'input-add-todo',
+	        	style: 'background: none',
+	        	listeners: {
+	        	  painted: function(){ this.focus();}
+	        	}
+	        }]
+		}
 });
 
 Ext.define('ToDoAlpha.view.todo.ListItem', {
@@ -63937,21 +64000,20 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
     xtype: 'todoitem',
 
     config: {
-      cls: 'todo-listitem task',
-      layout: {
+    	cls: 'todo-listitem task',
+    	layout: {
             type: 'hbox',
             pack: 'start',
             align: 'center'
         },
-//        cls: 'test-animation',
         clockButton: {
           hidden: true,
-          ui: 'plain',
-          iconCls: 'button-clock-icon',
-          cls: 'button-clock',
+        	ui: 'plain',
+        	iconCls: 'button-clock-icon',
+        	cls: 'button-clock',
           height: '30px',
           width: '30px',
-          listeners : {
+        	listeners : {
                 element : 'element',
                 taphold : function(event, node, options, eOpts) {
                     return Todo.listItem.container.onClockTabhold(this, event, node, options, eOpts);
@@ -63974,7 +64036,7 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
                 setHtml: 'title'
             },
             getClockButton: {
-              setId: 'id'
+            	setId: 'id'
             }
         },
         listeners : {
@@ -63987,156 +64049,148 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
             // }
         }
 //        draggable: {
-//          direction: 'vertical',
-//          constrain: false,
-//          listeners:{
-//            dragstart: function(draggable, e, offsetX, offsetY){
-//              return Todo.listItem.container.onItemDragstart(draggable, e, offsetX, offsetY);
-//            },
-//            drag: function(draggable, e, offsetX, offsetY, eOpts){
-//              return Todo.listItem.container.onItemDrag(draggable, e, offsetX, offsetY, eOpts);
-//            },
-//            dragend: function(draggable, e, offsetX, offsetY, eOpts){
-//              return Todo.listItem.container.onItemDragend(draggable, e, offsetX, offsetY, eOpts);
-//            }
-//          }
+//        	direction: 'vertical',
+//        	constrain: false,
+//        	listeners:{
+//        		dragstart: function(draggable, e, offsetX, offsetY){
+//        			return Todo.listItem.container.onItemDragstart(draggable, e, offsetX, offsetY);
+//        		},
+//        		drag: function(draggable, e, offsetX, offsetY, eOpts){
+//        			return Todo.listItem.container.onItemDrag(draggable, e, offsetX, offsetY, eOpts);
+//        		},
+//        		dragend: function(draggable, e, offsetX, offsetY, eOpts){
+//        			return Todo.listItem.container.onItemDragend(draggable, e, offsetX, offsetY, eOpts);
+//        		}
+//        	}
 //        }
     },
-    initialize: function() {
-      Ext.namespace('Todo.listItem');
-      Todo.listItem.container = this;
-      this.addBeforeListener('painted', this.onTaskAdd, this);
+	  initialize: function() {
+  		Ext.namespace('Todo.listItem');
+  		Todo.listItem.container = this;
+  		this.addBeforeListener('painted', this.onTaskAdd, this);
     },
     onTaskTabhold: function(){
-      
+    	
     },
     onTaskAdd: function(el, eOpts){
-      if(Todo.List.isAdding){
-        //console.log(container, item, rendered, eOpts);
-        var item = Ext.getCmp(el.id);
-        // buttonClock = item.getAt(1),
+    	if(Todo.List.isAdding){
+    	  //console.log(container, item, rendered, eOpts);
+    	  var item = Ext.getCmp(el.id);
+    	  // buttonClock = item.getAt(1),
         // buttonDelete = item.getAt(2);
         // buttonClock.hide();
         // buttonDelete.hide();
-        item.getAt(3).setHtml('');
+    	  item.getAt(3).setHtml('');
         item.removeCls('removing-task');
-        item.addCls('adding-task');
-        var txt = Ext.create('ToDoAlpha.view.control.AddOnTodo');
-        txt.child('#txtAddTodo').on('blur', this.onTaskAddBlur);
-        item.insert(3,txt);
-          
-        // Ext.Anim.run(this, '', {
-          // from: {'min-height': '0px'},
-          // to: {'min-height': '40px'},
-          // after: function(){document.getElementsByClassName('x-input-el')[0].focus();}
-        // });
-          //document.getElementsByClassName('x-input-el')[0].focus();
-          //setTimeout(function(){document.getElementsByClassName('x-input-el')[0].focus();},100);
-      }
+    		item.addCls('adding-task');
+    		var txt = Ext.create('ToDoAlpha.view.control.AddOnTodo');
+      	txt.child('#txtAddTodo').on('blur', this.onTaskAddBlur);
+      	item.insert(3,txt);
+    	}
     },
     onTaskAddBlur: function(textField){
-      Todo.List.isAdding = false;
-      var title = textField.getValue().capitaliseFirstLetter(),
-        store = Ext.getStore('Tasks'),
-        addedRecord = store.getNewRecords()[0];
-      if(title.length){
-        addedRecord.set('title', title);
-        store.sync();
-      }else{
-        store.remove(addedRecord);
-      }
-      textField.up('#conAddTodo').destroy();
+    	Todo.List.isAdding = false;
+    	var title = textField.getValue().capitaliseFirstLetter(),
+    		store = Ext.getStore('Tasks'),
+    		addedRecord = store.getNewRecords()[0];
+    	if(title.length){
+    		addedRecord.set('title', title);
+    		store.sync();
+    	}else{
+    		store.remove(addedRecord);
+    	}
+    	textField.up('#conAddTodo').destroy();
     },
     onClockTabhold: function(button, event, node, options, eOpts){
-      Timeline.Controler.populateTimeStepRegions('.time-indicator');
-      
-      Todo.listItem.draggedClock = button;
-      //button.setTop(event.pageY);
-      //button.setLeft(event.pageX);
-      var left = AppHelper.isPhone() ? Ext.getBody().getSize().width - 60 : event.pageX - 160,
-        top = event.pageY - 20;
-      var listItem = button.getParent();
-      button.setStyle('top: ' + top + 'px; left: ' + left + 'px; position: absolute; overflow: visible');
-      button.setHeight(10);
-      button.setIcon(false);
-      button.setText('--:--')
-      button.setDraggable({
+    	Timeline.Controler.populateTimeStepRegions('.time-indicator');
+    	
+    	Todo.listItem.draggedClock = button;
+    	//button.setTop(event.pageY);
+    	//button.setLeft(event.pageX);
+    	var left = AppHelper.isPhone() ? Ext.getBody().getSize().width - 60 : event.pageX - 160,
+    		top = event.pageY - 20;
+    	var listItem = button.getParent();
+    	button.setStyle('top: ' + top + 'px; left: ' + left + 'px; position: absolute; overflow: visible');
+    	button.setHeight(10);
+    	button.setIcon(false);
+    	button.setText('--:--')
+    	button.setDraggable({
             constraint: false,
             listeners: {
-              dragstart: Todo.listItem.container.onClockDragstart,
-              drag: Todo.listItem.container.onClockDrag,
+            	dragstart: Todo.listItem.container.onClockDragstart,
+            	drag: Todo.listItem.container.onClockDrag,
               dragend: function(draggable, e, eOpts){Todo.listItem.container.onClockDragend(listItem, draggable, e, eOpts)},
               scope:   Todo.listItem.container
             }
-    });
-      //testbtn.fireEvent('dragstart', this);
+		});
+    	//testbtn.fireEvent('dragstart', this);
       //button.getParent().setCls('task-hour-dragging');
-      Ext.getCmp('conDraggable').add(Todo.listItem.draggedClock);
+    	Ext.getCmp('conDraggable').add(Todo.listItem.draggedClock);
     },
     onClockDragstart: function(draggable, e, offset, eOpts) {
-      Ext.getCmp('listTodo').setScrollable(false);
-      //Todo.listItem.container.calculateTimeBoxes(draggable.getElement());
+    	Ext.getCmp('listTodo').setScrollable(false);
+    	//Todo.listItem.container.calculateTimeBoxes(draggable.getElement());
     },
     onClockDrag: function(draggable, e, offsetX, offsetY, eOpts){
-//      if(offsetY % 20 == 0 && Math.abs(offsetY)){
-//        //var pos = (Timeline.dragButton.hour - 8) * App.config.defaultHourSpace + offsetY;
-//        var pos = e.pageY;
-//        Timeline.indicator.setTop(pos);
-//      }
-      var items = Timeline.minuteIndicators,
-      ln = items.length,
-      pageBoxRegion = draggable.getElement().getPageBox(true),
-      region = Ext.util.Region(pageBoxRegion),
-      i, intersect,item;
-    
-      for (i = 0; i < ln; i++) {
-              item = items[i];
-              intersect = region.intersect(item);
-              if (intersect) {
-                Ext.get(item.el).setVisibility(true);
-                Todo.listItem.draggedClock.setText(item.text);
-                //return;
-              }else{
-                Ext.get(item.el).setVisibility(false);
-              }
-      }
+//    	if(offsetY % 20 == 0 && Math.abs(offsetY)){
+//    		//var pos = (Timeline.dragButton.hour - 8) * App.config.defaultHourSpace + offsetY;
+//    		var pos = e.pageY;
+//    		Timeline.indicator.setTop(pos);
+//    	}
+    	var items = Timeline.minuteIndicators,
+  		ln = items.length,
+  		pageBoxRegion = draggable.getElement().getPageBox(true),
+  		region = Ext.util.Region(pageBoxRegion),
+  		i, intersect,item;
+		
+  		for (i = 0; i < ln; i++) {
+  						item = items[i];
+  						intersect = region.intersect(item);
+  						if (intersect) {
+  							Ext.get(item.el).setVisibility(true);
+  							Todo.listItem.draggedClock.setText(item.text);
+  							//return;
+  						}else{
+  							Ext.get(item.el).setVisibility(false);
+  						}
+  		}
     },
     onClockDragend: function(listItem, draggable, e, eOpts){
       Ext.getCmp('listTodo').setScrollable(true);
-      var items = Timeline.minuteIndicators,
-        ln = items.length,
-        pageBoxRegion = draggable.getElement().getPageBox(true),
-        region = Ext.util.Region(pageBoxRegion),
-        i, intersect, item;
-      //var thd = document.getElementsByClassName('task-hour-dragging')[0];
-      //if(thd != undefined){thd.className = 'task';}
-      
-      var isIntersect = false;
-      for (i = 0; i < ln; i++) {
-        item = items[i];
-        intersect = region.intersect(item);
-        if (intersect) {
-          isIntersect = true;
-          var id = Todo.listItem.draggedClock.id,
-            time = Todo.listItem.draggedClock.getText(),
-            tStore = Ext.getStore('Tasks'),
-            rStore = Ext.getStore('Reminders'),
-            tIndex = tStore.findExact('id', id),
-            task = tStore.getAt(tIndex),
-            currentY = Ext.getCmp('conCalendar').getScrollable().getScroller().position.y;
-          time = Ext.Date.format(new Date(), 'n/j/Y') + ' ' + time;
-          rStore.add({title: task.get('title'),
+    	var items = Timeline.minuteIndicators,
+    		ln = items.length,
+    		pageBoxRegion = draggable.getElement().getPageBox(true),
+    		region = Ext.util.Region(pageBoxRegion),
+    		i, intersect, item;
+    	//var thd = document.getElementsByClassName('task-hour-dragging')[0];
+  		//if(thd != undefined){thd.className = 'task';}
+  		
+  		var isIntersect = false;
+  		for (i = 0; i < ln; i++) {
+  			item = items[i];
+  			intersect = region.intersect(item);
+  			if (intersect) {
+  			  isIntersect = true;
+  				var id = Todo.listItem.draggedClock.id,
+  					time = Todo.listItem.draggedClock.getText(),
+  					tStore = Ext.getStore('Tasks'),
+  					rStore = Ext.getStore('Reminders'),
+  					tIndex = tStore.findExact('id', id),
+  				  task = tStore.getAt(tIndex),
+  				  currentY = Ext.getCmp('conCalendar').getScrollable().getScroller().position.y;
+  				time = Ext.Date.format(new Date(), 'n/j/Y') + ' ' + time;
+  				rStore.add({title: task.get('title'),
             tasktime: time,
             isontimeline: true});
-          rStore.sync();
-          tStore.removeAt(tIndex);
-          tStore.sync();
-          
-          //Show event to the screen
-          var top = (item.top - AppConfig.timelineHeaderHeight + currentY),
-           timeObject = new Date(time),
-           h = parseInt(Ext.Date.format(timeObject, 'H')),
-           m = parseInt(Ext.Date.format(timeObject, 'i'));
+  				rStore.sync();
+  				tStore.removeAt(tIndex);
+  				tStore.sync();
+  				
+	        //Show event to the screen
+	        var top = (item.top - AppConfig.timelineHeaderHeight + currentY),
+	         timeObject = new Date(time),
+	         h = parseInt(Ext.Date.format(timeObject, 'H')),
+	         m = parseInt(Ext.Date.format(timeObject, 'i'));
           if(m > 0){
             Timeline.Controler.getConTimeList().add(Ext.create('Ext.Button',{
                 text: Ext.Date.format(timeObject, 'g:i'),
@@ -64157,7 +64211,7 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
             html: task.get('title').trunc(AppConfig.textTrunc)
           });
           eventAdd.addCls('timeline-event'); 
-          Ext.getCmp('conTaskList').add(eventAdd);
+  				Ext.getCmp('conTaskList').add(eventAdd);
           //set Vidible if want to add multi event on an indicator/ hide to disable add
           //var mIndicator = Ext.getCmp('minute-indicator-' + Ext.Date.format(time, 'G') + '-'+ parseInt(Ext.Date.format(time, 'i')));
           var mIndicator = document.getElementById('minute-indicator-' + h + '-'+ m);
@@ -64172,8 +64226,8 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
             });
           }
           break;
-        }
-      }
+  			}
+		  }
       var id = Todo.listItem.draggedClock.id;
       Todo.listItem.draggedClock.destroy();
       if(!isIntersect){
@@ -64193,112 +64247,112 @@ Ext.define('ToDoAlpha.view.todo.ListItem', {
       }
     },
     onItemDragstart: function(draggable, e, offsetX, offsetY, eOpts){
-      Ext.getCmp('listTodo').setScrollable(false);
-      Todo.listItem.container.dragEl = draggable.getElement();
-      Todo.listItem.container.calculateBoxes();
-    draggable.getElement().toMoveIndex = draggable.getElement().index;
+    	Ext.getCmp('listTodo').setScrollable(false);
+    	Todo.listItem.container.dragEl = draggable.getElement();
+    	Todo.listItem.container.calculateBoxes();
+		draggable.getElement().toMoveIndex = draggable.getElement().index;
     },
     onItemDrag: function(draggable, e, offsetX, offsetY, eOpts){
-      //Ext.ComponentQuery.query('#listTodo')[0].setScrollable(false);
-      //console.log(Ext.util.Region.getRegion(e.target));
-      //var items = Ext.ComponentQuery.query('.todoitem');
-      var items = Todo.listItem.container.items,
-    ln = items.length,
-    pageBoxRegion = draggable.getElement().getPageBox(true),
-    region = Ext.util.Region(pageBoxRegion),
-    sortChange = false,
-    i, intersect, overlap, item;
-    
-    for (i = 0; i < ln; i++) {
-      item = items[i];
-      intersect = region.intersect(item);
-      // If the region intersect with draggable element's region
-      if (intersect) {
-        // Need to keep a reference of the draggable element's index
-        if (Math.abs(intersect.top - intersect.bottom) > (region.bottom - region.top) / 2) {
-          if (region.bottom > item.top && item.top > region.top) {
-            draggable.getElement().insertAfter(item.el);
-            draggable.getElement().toMoveIndex++;
-          }
-          else {
-            draggable.getElement().insertBefore(item.el);
-            draggable.getElement().toMoveIndex--;
-          }
-          sortChange = true;
-        }
-        else if (Math.abs(intersect.left - intersect.right) > (region.right - region.left) / 2) {
-          if (region.right > item.left && item.left > region.left) {
-            draggable.getElement().insertAfter(item.el);
-            draggable.getElement().toMoveIndex++;
-          }
-          else {
-            draggable.getElement().insertBefore(item.el);
-            draggable.getElement().toMoveIndex--;
-          }
-          sortChange = true;
-        }
-        // If the sort position changes, set the draggable elements position according to its region
-        if (sortChange) {
-          draggable.getElement().setXY([region.left, region.top]);  
-          // Calcualte all teh draggable elements' postion again
-          Todo.listItem.container.calculateBoxes();
-          return;
-        }
-      }
-    }
+    	//Ext.ComponentQuery.query('#listTodo')[0].setScrollable(false);
+    	//console.log(Ext.util.Region.getRegion(e.target));
+    	//var items = Ext.ComponentQuery.query('.todoitem');
+    	var items = Todo.listItem.container.items,
+		ln = items.length,
+		pageBoxRegion = draggable.getElement().getPageBox(true),
+		region = Ext.util.Region(pageBoxRegion),
+		sortChange = false,
+		i, intersect, overlap, item;
+		
+		for (i = 0; i < ln; i++) {
+			item = items[i];
+			intersect = region.intersect(item);
+			// If the region intersect with draggable element's region
+			if (intersect) {
+				// Need to keep a reference of the draggable element's index
+				if (Math.abs(intersect.top - intersect.bottom) > (region.bottom - region.top) / 2) {
+					if (region.bottom > item.top && item.top > region.top) {
+						draggable.getElement().insertAfter(item.el);
+						draggable.getElement().toMoveIndex++;
+					}
+					else {
+						draggable.getElement().insertBefore(item.el);
+						draggable.getElement().toMoveIndex--;
+					}
+					sortChange = true;
+				}
+				else if (Math.abs(intersect.left - intersect.right) > (region.right - region.left) / 2) {
+					if (region.right > item.left && item.left > region.left) {
+						draggable.getElement().insertAfter(item.el);
+						draggable.getElement().toMoveIndex++;
+					}
+					else {
+						draggable.getElement().insertBefore(item.el);
+						draggable.getElement().toMoveIndex--;
+					}
+					sortChange = true;
+				}
+				// If the sort position changes, set the draggable elements position according to its region
+				if (sortChange) {
+					draggable.getElement().setXY([region.left, region.top]);	
+					// Calcualte all teh draggable elements' postion again
+					Todo.listItem.container.calculateBoxes();
+					return;
+				}
+			}
+		}
     },
     onItemDragend: function(draggable, e, offsetX, offsetY, eOpts){
-//      if (!draggable.isDragging) {
-//      return;
-//    }
-    
-      draggable.onDrag(e);
-    
-//    if (draggable.revert) {
-      draggable.setOffset(draggable.dragStartOffset.x, draggable.dragStartOffset.y, {
-                  duration: 100
-          });
-//    }
-    
-    draggable.isDragging = false;
-    
-    draggable.getElement().removeCls(draggable.getDraggingCls());
-    
-    //co dinh
-    draggable.getElement().setStyle({
-      top : 0
-    });
-//    draggable.fireEvent('dragend', draggable, e, draggable.offset.x, draggable.offset.y);
+//    	if (!draggable.isDragging) {
+//			return;
+//		}
+		
+    	draggable.onDrag(e);
+		
+//		if (draggable.revert) {
+			draggable.setOffset(draggable.dragStartOffset.x, draggable.dragStartOffset.y, {
+									duration: 100
+					});
+//		}
+		
+		draggable.isDragging = false;
+		
+		draggable.getElement().removeCls(draggable.getDraggingCls());
+		
+		//co dinh
+		draggable.getElement().setStyle({
+			top : 0
+		});
+//		draggable.fireEvent('dragend', draggable, e, draggable.offset.x, draggable.offset.y);
     },
     calculateBoxes : function() {
-      Todo.listItem.container.items = [];
-      var els = Ext.get('listTodo').select('.todo-listitem').elements,
-      ln = els.length, i, item, el, box;
-      
-      for (i = 0; i < ln; i++) {
-        el = els[i];
-        if (el != Todo.listItem.container.dragEl.dom) {
-          item = Ext.get(el).getPageBox(true);
-          item.el = el;
-          item.index = i;
-          Todo.listItem.container.items.push(item);
-        }
-      }
+    	Todo.listItem.container.items = [];
+  		var els = Ext.get('listTodo').select('.todo-listitem').elements,
+  		ln = els.length, i, item, el, box;
+  		
+  		for (i = 0; i < ln; i++) {
+  			el = els[i];
+  			if (el != Todo.listItem.container.dragEl.dom) {
+  				item = Ext.get(el).getPageBox(true);
+  				item.el = el;
+  				item.index = i;
+  				Todo.listItem.container.items.push(item);
+  			}
+  		}
     },
     calculateTimeBoxes : function(dragEl) {
-      Todo.listItem.container.times = [];
-      var els = Ext.get('conTimeList').select('.x-button').elements,
-      ln = els.length, i, item, el, box;
-      
-      for (i = 0; i < ln; i++) {
-              el = els[i];
-              if (el != dragEl.dom) {
-                      item = Ext.get(el).getPageBox(true);
-                      item.el = el;
-                      item.index = i;
-                      Todo.listItem.container.times.push(item);
-              }
-      }
+    	Todo.listItem.container.times = [];
+  		var els = Ext.get('conTimeList').select('.x-button').elements,
+  		ln = els.length, i, item, el, box;
+  		
+  		for (i = 0; i < ln; i++) {
+  						el = els[i];
+  						if (el != dragEl.dom) {
+  										item = Ext.get(el).getPageBox(true);
+  										item.el = el;
+  										item.index = i;
+  										Todo.listItem.container.times.push(item);
+  						}
+  		}
     },
     // onSwipe: function(event, node, options, eOpts){
 //        
@@ -64369,51 +64423,45 @@ Ext.define('ToDoAlpha.view.todo.List', {
         },
         useComponents: true,
         id: 'listtodo',
-        defaultType: 'todoitem',
-        store: 'Tasks',
-        listeners: {
-          itemswipe: function (list, idx, target, record, evt) {
+      	defaultType: 'todoitem',
+      	store: 'Tasks',
+      	listeners: {
+      		itemswipe: function (list, idx, target, record, evt) {
                   Todo.List.onItemSwipe(list, idx, target, record, evt);
               }
-        }
-//      data: [
-//               { title: 'Item 1' },
-//               { title: 'Item 2' },
-//               { title: 'Item 3' },
-//               { title: 'Item 2' }
-//           ]
+      	}
     },
     initialize: function(){
-      Ext.namespace('Todo');
-      Todo.List = this;
-      this.callParent(); 
-      var scroller = this.getScrollable().getScroller();
-      scroller.on({
-        scroll: Todo.List.onScrollChange,
-        scope: Todo.List
-      });
-      Todo.List.pullHeight = 50;
-      Todo.List.selectedMenu = -1;
-      
-      var mSync = Ext.create('Ext.Component', {
-        id: 'mSync',
-          html: 'SYNC GOOGLE TASK',
-          style: 'top: -120px;position: absolute;',
-          cls: 'menu-top-item'
-      });
-      var mAddEnd = Ext.create('Ext.Component', {
-        id: 'mAddEnd',
-          html: 'ADD TO BOTTOM',
-          style: 'top: -85px;position: absolute;',
-          cls: 'menu-top-item'
-      });
-      var mAdd = Ext.create('Ext.Component', {
-        id: 'mAdd',
-          html: 'ADD',
-          style: 'top: -50px;position: absolute;',
-          cls: 'menu-top-item'
-      });
-      this.insert(0, [mSync, mAddEnd, mAdd]);
+    	Ext.namespace('Todo');
+    	Todo.List = this;
+    	this.callParent(); 
+    	var scroller = this.getScrollable().getScroller();
+    	scroller.on({
+    		scroll: Todo.List.onScrollChange,
+    		scope: Todo.List
+    	});
+    	Todo.List.pullHeight = 50;
+    	Todo.List.selectedMenu = -1;
+    	
+    	var mSync = Ext.create('Ext.Component', {
+    		id: 'mSync',
+    	    html: 'SYNC GOOGLE TASK',
+    	    style: 'top: -120px;position: absolute;',
+    	    cls: 'menu-top-item'
+    	});
+    	var mAddEnd = Ext.create('Ext.Component', {
+    		id: 'mAddEnd',
+    	    html: 'ADD TO BOTTOM',
+    	    style: 'top: -85px;position: absolute;',
+    	    cls: 'menu-top-item'
+    	});
+    	var mAdd = Ext.create('Ext.Component', {
+    		id: 'mAdd',
+    	    html: 'ADD',
+    	    style: 'top: -50px;position: absolute;',
+    	    cls: 'menu-top-item'
+    	});
+    	this.insert(0, [mSync, mAddEnd, mAdd]);
     },
     onScrollChange: function(scroller, x, y) {
         if (y < 0 && scroller.isTouching) {
@@ -64424,72 +64472,72 @@ Ext.define('ToDoAlpha.view.todo.List', {
 //        }
     },
     onBounceTop: function(scroller, y) {
-    this.child('#mAdd').removeCls('menu-top-item-selected');
-    this.child('#mAddEnd').removeCls('menu-top-item-selected');
-    this.child('#mSync').removeCls('menu-top-item-selected');
-    Todo.List.slectedMenu = -1;
-      if(-y >= 120 && -y < 160){
-        this.child('#mSync').addCls('menu-top-item-selected');
-        Todo.List.slectedMenu = 0;
-      }else if(-y >= 85 && -y < 120){
-        this.child('#mAddEnd').addCls('menu-top-item-selected');
-        Todo.List.slectedMenu = 1;
-      }else if (-y >= Todo.List.pullHeight && -y < 85){
-        this.child('#mAdd').addCls('menu-top-item-selected');
-        Todo.List.slectedMenu = 2;
-      }
-      if (!Todo.List.isReleased) {
-          if (!Todo.List.isAdding && -y >= Todo.List.pullHeight) {
-              Todo.List.isAdding = true;
-  
-              //Todo.List.setViewState('release');
-              scroller.getContainer().onBefore({
-                  dragend: function(){ Todo.List.onScrollerDragEnd(scroller);},
-                  single: true,
-                  scope: Todo.List
-              });
-          }
-          else if (Todo.List.isAdding && -y < Todo.List.pullHeight) {
-              Todo.List.isAdding = false;
-              //Todo.List.setViewState('pull');
-          }
-      }
+		this.child('#mAdd').removeCls('menu-top-item-selected');
+		this.child('#mAddEnd').removeCls('menu-top-item-selected');
+		this.child('#mSync').removeCls('menu-top-item-selected');
+		Todo.List.slectedMenu = -1;
+    	if(-y >= 120 && -y < 160){
+    		this.child('#mSync').addCls('menu-top-item-selected');
+    		Todo.List.slectedMenu = 0;
+    	}else if(-y >= 85 && -y < 120){
+    		this.child('#mAddEnd').addCls('menu-top-item-selected');
+    		Todo.List.slectedMenu = 1;
+    	}else if (-y >= Todo.List.pullHeight && -y < 85){
+    		this.child('#mAdd').addCls('menu-top-item-selected');
+    		Todo.List.slectedMenu = 2;
+    	}
+	    if (!Todo.List.isReleased) {
+	        if (!Todo.List.isAdding && -y >= Todo.List.pullHeight) {
+	            Todo.List.isAdding = true;
+	
+	            //Todo.List.setViewState('release');
+	            scroller.getContainer().onBefore({
+	                dragend: function(){ Todo.List.onScrollerDragEnd(scroller);},
+	                single: true,
+	                scope: Todo.List
+	            });
+	        }
+	        else if (Todo.List.isAdding && -y < Todo.List.pullHeight) {
+	            Todo.List.isAdding = false;
+	            //Todo.List.setViewState('pull');
+	        }
+	    }
     },
     onScrollerDragEnd: function(scroller) {
         if (Todo.List.isAdding) {
-//              scroller.minPosition.y = -Todo.List.pullHeight;
-          var now = new Date();
-          var store = Ext.getStore('Tasks');
-          if(store.getNewRecords().length == 0 ){
-            if(Todo.List.slectedMenu == 0){
-              Todo.List.isAdding = false;
-              //Ext.Msg.alert('Thank you', 'This feature is comming soon...', Ext.emptyFn);
-              AppHelper.showToast(Todo.List, "Google sync feature is comming soon...");
-            }else if(Todo.List.slectedMenu == 1){
-              var last = store.last(),
-              order = last ? last.get('taskorder') + 1 : 0;
-              store.add([{
-                title: '',
-                tasktime: now,
-                isontimeline: false,
-                taskorder: order
-              }]);
-            }else if (Todo.List.slectedMenu == 2){
-              var first = store.first(),
-              order = first ? first.get('taskorder') - 1 : 0;
-              store.insert(0,[{
-                title: '',
-                tasktime: now,
-                isontimeline: false,
-                taskorder: order
-              }]);
-            }
-          }
-          scroller.on({
+//            	scroller.minPosition.y = -Todo.List.pullHeight;
+        	var now = new Date();
+        	var store = Ext.getStore('Tasks');
+        	if(store.getNewRecords().length == 0 ){
+          	if(Todo.List.slectedMenu == 0){
+          	  Todo.List.isAdding = false;
+          		//Ext.Msg.alert('Thank you', 'This feature is comming soon...', Ext.emptyFn);
+          		AppHelper.showToast(Todo.List, "Google sync feature is comming soon...");
+          	}else if(Todo.List.slectedMenu == 1){
+          		var last = store.last(),
+      				order = last ? last.get('taskorder') + 1 : 0;
+          		store.add([{
+      				  title: '',
+      				  tasktime: now,
+      				  isontimeline: false,
+      				  taskorder: order
+      				}]);
+          	}else if (Todo.List.slectedMenu == 2){
+          		var first = store.first(),
+        			order = first ? first.get('taskorder') - 1 : 0;
+          		store.insert(0,[{
+      				  title: '',
+      				  tasktime: now,
+      				  isontimeline: false,
+      				  taskorder: order
+      				}]);
+          	}
+        	}
+        	scroller.on({
               scrollend: function(){ Todo.List.isReleased = false},
               single: true,
               scope: Todo.List
-          });
+        	});
             Todo.List.isReleased = true;
             //this.setData(this.getData().unshift({title: 'add new'}));
             //this.refresh();
@@ -64499,10 +64547,10 @@ Ext.define('ToDoAlpha.view.todo.List', {
       if(Todo.List.isAdding){
         return;
       }
-      var tStore = Ext.getStore('Tasks'),
-         listItem = list.getAt(idx),
-         buttonClock = listItem.getAt(1),
-         buttonDelete = listItem.getAt(2);
+    	var tStore = Ext.getStore('Tasks'),
+    	   listItem = list.getAt(idx),
+    	   buttonClock = listItem.getAt(1),
+    	   buttonDelete = listItem.getAt(2);
       if(event.direction == 'left'){
         if(buttonClock.isHidden() && buttonDelete.isHidden()){
           listItem.addCls('removing-task');
@@ -64522,9 +64570,6 @@ Ext.define('ToDoAlpha.view.todo.List', {
             checkIcon.destroy();
             tStore.sync();
             },1000);
-          // Ext.Anim.run(listItem, 'fade', {
-              // after: function(){tStore.removeAt(idx);}
-          // });
         }else{
           buttonClock.hide();
           buttonDelete.hide();
@@ -64543,21 +64588,21 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
        'ToDoAlpha.view.Calendar',
        'ToDoAlpha.view.todo.List'
     ],
-  config:{
-      layout: 'hbox',
-      id: 'conDraggable',
-      width: '95%',
+	config:{
+    	layout: 'hbox',
+    	id: 'conDraggable',
+    	width: '95%',
         height: '100%',
         style: 'opacity: 1;',//disable drag effect of x-dragging
-      items:[{
+    	items:[{
             xtype: 'calendar',
             id: 'conCalendar',
             width: '60%'
         },
         {
-          xtype: 'listtodo',
-          id: 'listTodo',
-          width: '40%'
+        	xtype: 'listtodo',
+        	id: 'listTodo',
+        	width: '40%'
         }],
         listeners: {
               element: 'element',
@@ -64570,50 +64615,45 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
                 }
               }
         }
-  },
-  initialize: function() {
-    this.callParent(arguments);
-    Ext.namespace('DraggableContainer');
-    DraggableContainer = this;
-    var screenWidth = Ext.getBody().getSize().width;
-    this.todoWidth = screenWidth - AppConfig.timelistWidth - 5;
-    
-    //phone (720 is galaxy s3)
-    if(AppHelper.isPhone()){
-      this.setWidth(screenWidth * 2);
-      this.child('#conCalendar').setWidth(screenWidth);
-      this.child('#listTodo').setWidth(this.todoWidth);
-      this.down('#conTaskList').setWidth(screenWidth - AppConfig.timelistWidth);
-      this.setDraggable({
-              direction: 'horizontal',
-              constraint: {
-                  min: { x: -DraggableContainer.todoWidth, y: 0 },
-                  max: { x: 0, y: 0 }
-              },
-              listeners: {
-                  dragstart: {
-                      fn:    function(draggable, e, offset, eOpts){return DraggableContainer.onContainerDragstart(draggable, e, offset, eOpts);},
-                      order: 'before'
-                  },
-                  dragend: function(draggable, e, eOpts){return DraggableContainer.onContainerDragend(draggable, e, eOpts);}
-              }
-      });
+	},
+	initialize: function() {
+		this.callParent(arguments);
+		Ext.namespace('DraggableContainer');
+		DraggableContainer = this;
+		var screenWidth = Ext.getBody().getSize().width;
+		this.todoWidth = screenWidth - AppConfig.timelistWidth - 5;
+		
+		//phone (720 is galaxy s3)
+		if(AppHelper.isPhone()){
+			this.setWidth(screenWidth * 2);
+			this.child('#conCalendar').setWidth(screenWidth);
+			this.child('#listTodo').setWidth(this.todoWidth);
+			this.down('#conTaskList').setWidth(screenWidth - AppConfig.timelistWidth);
+			this.setDraggable({
+	            direction: 'horizontal',
+	            constraint: {
+	                min: { x: -DraggableContainer.todoWidth, y: 0 },
+	                max: { x: 0, y: 0 }
+	            },
+	            listeners: {
+	                dragstart: {
+	                    fn:    function(draggable, e, offset, eOpts){return DraggableContainer.onContainerDragstart(draggable, e, offset, eOpts);},
+	                    order: 'before'
+	                },
+	                dragend: function(draggable, e, eOpts){return DraggableContainer.onContainerDragend(draggable, e, eOpts);}
+	            }
+			});
       Ext.getCmp('toast').setLeft('10%');
       Ext.getCmp('toast').setWidth('80%');
-    }else{
-      this.setDraggable(false);
-      AppConfig.truncLength = 50;
-      //console.log(window.getComputedStyle(Ext.get('conCalendar').dom));
-    }
+		}else{
+			this.setDraggable(false);
+			AppConfig.truncLength = 50;
+			//console.log(window.getComputedStyle(Ext.get('conCalendar').dom));
+		}
     },
-    /**
-     *  @private
-     *
-     *  Callback function for when the container has started being dragged.
-     */
     onContainerDragstart: function(draggable, e, offset, eOpts) {
-      //return if hour is dragging
-      if(Timeline.isHourDragging){return false;}
+    	//return if hour is dragging
+    	if(Timeline.isHourDragging){return false;}
       var x = e.pageX,
         width = Ext.getBody().getSize().width;
       if((draggable.offset.x == 0 && width - x <= 60) || (draggable.offset.x != 0 && x <= 60 + 5)){
@@ -64622,12 +64662,6 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
       }
       return false;
     },
-  /**
-    *  @private
-    *
-    *  Callback function for when the container has finished being dragged.  This determines
-    *  which direction to finish moving the container based on its current position and velocity.
-    */
     onContainerDragend: function(draggable, e, eOpts) {
         var velocity  = Math.abs(e.deltaX / e.deltaTime),
             direction = (e.deltaX > 0) ? "right" : "left",
@@ -64646,11 +64680,6 @@ Ext.define('ToDoAlpha.view.DraggableContainer', {
         
         this.moveContainer(this, offset.x);
     },
-    /**
-     *  @private
-     *
-     *  Moves the container to a specified ``offsetX`` pixels.  
-     */
     moveContainer: function(nav, offsetX) {
         var duration  = 250;
         var draggable = this.draggableBehavior.draggable;
@@ -64678,13 +64707,13 @@ Ext.define('ToDoAlpha.view.Main', {
     ],
     id: 'conMain',
     config:{
-      layout: {
-        type: 'vbox',
-        align: 'center',
-        pack: 'start'
-      },
-      cls: 'background-none',
-      items:[
+    	layout: {
+    		type: 'vbox',
+    		align: 'center',
+    		pack: 'start'
+    	},
+    	cls: 'background-none',
+	    items:[
          {
            xtype: 'panel',
            id: 'toast',
@@ -64692,8 +64721,8 @@ Ext.define('ToDoAlpha.view.Main', {
            floatingCls: 'toast',
            left: '30%'
          },
-         {xtype: 'dragcontainer'}
-      ]
+	       {xtype: 'dragcontainer'}
+	    ]
     }
 });
 
@@ -64738,3 +64767,4 @@ Ext.application({
         );
     }
 });
+
